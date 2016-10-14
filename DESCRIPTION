@@ -17,3 +17,6 @@ Imports: magrittr,
     lubridate,
     tidyr,
     stringr
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
