@@ -5,12 +5,14 @@ author: "Associação Brasileira de Jurimetria e Instituto Não Aceito Corrupç�
 date: "`r format(Sys.Date(), '%d de %B de %Y')`"
 output: 
     # html_notebook: default
-    pdf_document: 
+    bookdown::pdf_document2: 
       includes:
         in_header: style.sty
         before_body: body.tex
       number_sections: yes
+      toc: false
 linkcolor: "blue"
+geometry: bmargin=1.5in,lmargin=.8in,rmargin=.8in,tmargin=.7in
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEncoding{UTF-8}
