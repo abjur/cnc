@@ -1,13 +1,15 @@
 ---
 title: "Cadastro Nacional de Condenações Cíveis por Ato de Improbidade Administrativa e Inelegibilidade"
-subtitle: "Relatório preliminar 03: análises sobre valores e perfil dos condenados"
+subtitle: "Relatório preliminar: análises sobre valores e perfil dos condenados"
 author: "Associação Brasileira de Jurimetria e Instituto Não Aceito Corrupção"
 date: "`r format(Sys.Date(), '%d de %B de %Y')`"
 output: 
     bookdown::html_document2:
       code_folding: hide
-geometry: bmargin=1.5in,lmargin=.8in,rmargin=.8in,tmargin=.7in
-linkcolor: "blue"
+vignette: >
+  %\VignetteIndexEntry{Analise preliminar 1}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r , warning=FALSE, message=FALSE}
@@ -17,8 +19,6 @@ devtools::load_all()
 ```
 
 No relatório preliminar 01, mostramos como a base de dados foi baixada e o conteúdo da base depois após a fase de arrumação de dados. Neste documento, apresentaremos análises preliminares sobre duas quantidades de interesse na pesquisa: i) perfil dos condenados do CNC e ii) valores envolvidos nos processos (desagregado por divesos critérios).
-
-\clearpage
 
 # Perfil dos condenados
 
@@ -128,10 +128,11 @@ p <- tidy_cnc %>%
   scale_y_log10(labels = scales::dollar) +
   theme_bw()
 
-plotly::ggplotly(p)
+# plotly::ggplotly(p)
+p
 ```
 
-A Tabela \@ref(tab:maiorN) mostra as 20 pessoas com maior quantidade de multas. Observe que apesar de observarmos pessoas com pelo menos 12 multas cada, 97% do valor de multas está concentrado nas multas restantes.
+A tabela \@ref(tab:maiorN) mostra as 20 pessoas com maior quantidade de multas. Observe que apesar de observarmos pessoas com pelo menos 12 multas cada, 97% do valor de multas está concentrado nas multas restantes.
 
 ```{r maiorN}
 tidy_cnc %>% 
@@ -152,7 +153,7 @@ tidy_cnc %>%
                caption = 'Pessoas com maiores quantidade de multas, valor agregado e proporção do total.')
 ```
 
-A Tabela \@ref(tab:maiorV) mostra os 20 casos com maior valor de multas. Observe que somente esses casos concentram quase metade do valor total das multas.
+A tabela \@ref(tab:maiorV) mostra os 20 casos com maior valor de multas. Observe que somente esses casos concentram quase metade do valor total das multas.
 
 ```{r maiorV}
 tidy_cnc %>% 
@@ -174,172 +175,4 @@ tidy_cnc %>%
   mutate(`% acu. vl total` = if_else(`% acu. vl total` == 'NA%', '', `% acu. vl total`)) %>% 
   knitr::kable(booktabs = TRUE, 
                caption = 'Condenações com multas de maior valor com informação do tipo de pessoa e proporção acumulada da soma dos valores.')
-```
-
-
-### Multas por UF, assunto e origem
-
-A Tabela \@ref(tab:maiorA) mostra os 20 assuntos com maior valor agregado. Note que dano ao erário soma mais de 1 bilhão de reais. Tambem temos alguns assuntos genéricos que deveriam ser filtrados.
-
-```{r maiorA}
-tidy_cnc %>% 
-  filter(teve_multa == 'sim', vl_multa < 1e9) %>% 
-  select(starts_with('assunto_nm'), vl_multa) %>% 
-  gather(key, val, -vl_multa) %>% 
-  filter(!is.na(val)) %>% 
-  group_by(val) %>% 
-  summarise(soma = sum(vl_multa)) %>% 
-  arrange(desc(soma)) %>% 
-  mutate(soma = scales::dollar(soma)) %>% 
-  head(20) %>% 
-  knitr::kable(booktabs = TRUE, 
-               caption = 'Assuntos com maior valor de multas agregado (valores de multas em processos com mais de um assunto foram contados duas vezes)')
-```
-
-A Figura \@ref(fig:mapa3) mostra as UFs com maior soma de multas por habitante. Acre e Distrito Federal estão no topo com mais de 30 reais por habitante, seguidos por Rondônia e Maranhão, com mais de 10 reais por habitante.
-
-```{r mapa3, warning=FALSE, message=FALSE, fig.cap = 'Valor somado de multas por habitante em cada Unidade Federativa.', out.width="70%", fig.align='center'}
-data(pnud_uf, package = 'abjutils')
-data(cadmun, package = 'abjutils')
-cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
-pnud_uf %<>% filter(ano == 2010) %>% select(uf, popt) %>% 
-  mutate(uf = as.character(uf)) %>% 
-  inner_join(cadmun, c('uf' = 'cod')) %>% 
-  select(id = uf.y, popt)
-p <- tidy_cnc %>% 
-  filter(teve_multa == 'sim', vl_multa < 1e9) %>% 
-  mutate(id = uf) %>% 
-  group_by(id) %>% 
-  summarise(soma = sum(vl_multa)) %>% 
-  inner_join(pnud_uf, 'id') %>%
-  mutate(tx = soma / popt) %>% 
-  mutate(tx = cut(tx, c(0, 1, 5, 10, 20, 30, max(tx)), dig.lab = 3,
-                  ordered_result = TRUE)) %>% 
-  inner_join(br_uf_map) %>% {
-    ggplot(.) +
-      geom_map(aes(x = long, y = lat, map_id = id, fill = tx),
-               colour = 'gray30', size = .1, alpha = .8,
-               map = ., data = .) +
-      scale_fill_brewer(palette = 'PuRd') +
-      coord_equal() +
-      theme_void()
-  }
-p
-```
-
-A Tabela \@ref(tab:multa-esfera) mostra estatísticas descritivas dos valores das multas por esfera. Observe que a mediana da esfera estadual é menor que a da federal, mas a média é maior. 
-
-
-```{r multa-esfera}
-dol <- scales::dollar
-tidy_cnc %>% 
-  filter(teve_multa == 'sim', vl_multa < 1e9) %>% 
-  group_by(esfera_processo) %>% 
-  summarise(n = n(),
-            media = mean(vl_multa), 
-            mediana = median(vl_multa),
-            soma = sum(vl_multa)) %>% 
-  mutate_if(is_double, funs(dol(.))) %>% 
-  knitr::kable(booktabs = TRUE, 
-               caption = 'Estatísticas descritivas dos valores das multas por esfera do processo.')
-```
-
-## Distribuição geográfica dos processos
-
-Podemos identificar a comarca somente dos processos estaduais de primeiro grau. A Tabela \@ref(tab:coma) mostra as 30 comarcas com maior taxa de processos por 100 mil habitantes.
-
-```{r coma}
-# data(cadmun, package = 'abjutils')
-data(pnud_muni, package = 'abjutils')
-pnud_muni %<>% 
-  as_tibble() %>% 
-  filter(ano == 2010) %>% 
-  select(ufn, municipio, popt) %>% 
-  mutate(municipio = toupper(abjutils::rm_accent(municipio)))
-
-# pnud_muni %>% 
-  # filter(stringr::str_detect(municipio, 'TRES RIOS'))
-
-# a %>% 
-#   count(tribunal, comarca_secao) %>% 
-#   anti_join(pnud_muni, c('tribunal' = 'ufn', 'comarca_secao' = 'municipio')) %>% 
-#   arrange(desc(n))
-
-tr <- 'Tribunal de Justiça d[eo]|Estado d[eoa]|e dos Territórios'
-tidy_cnc_coma <- tidy_cnc %>% 
-  filter(esfera_processo == 'Estadual', instancia == '1 grau') %>%
-  mutate(tribunal = stringr::str_replace_all(tribunal, tr, ''),
-         tribunal = stringr::str_trim(tribunal),
-         comarca_secao = toupper(abjutils::rm_accent(comarca_secao))) %>% 
-  mutate(comarca_secao = with(., case_when(
-    comarca_secao == 'CAPITAL' ~ 'RIO DE JANEIRO',
-    comarca_secao == 'GAMA' ~ 'BRASILIA',
-    comarca_secao == 'TRES RIOS/AREAL/LEVY GASPARIAN' ~ 'TRES RIOS',
-    comarca_secao == 'CAMPO GRANDE' & tribunal == 'Rio Grande do Norte' ~ 'AUGUSTO SEVERO',
-    comarca_secao == 'MOJI-MIRIM' ~ 'MOJI MIRIM',
-    comarca_secao == 'SANTO ANTONIO DE PADUA/APERIBE' ~ 'SANTO ANTONIO DE PADUA',
-    comarca_secao == 'ELDORADO PAULISTA' & tribunal == 'São Paulo' ~ 'ELDORADO',
-    comarca_secao == 'CAMBUCI/SAO JOSE DE UBA' ~ 'CAMBUCI',
-    comarca_secao == 'AREZ' ~ 'ARES',
-    comarca_secao == 'NATIVIDADE/VARRE-SAI' ~ 'NATIVIDADE',
-    comarca_secao == 'CARAPEBUS/QUISSAMA' ~ 'CARAPEBUS',
-    comarca_secao == 'EMBU DAS ARTES' ~ 'EMBU',
-    comarca_secao == 'NOVA IGUACU/MESQUITA' ~ 'NOVA IGUACU',
-    comarca_secao == 'JABUTICATUBAS' ~ 'JABOTICATUBAS',
-    comarca_secao == 'IPAUCU' ~ 'IPAUSSU',
-    comarca_secao == 'NUCLEO BANDEIRANTE' ~ 'BRASILIA',
-    comarca_secao == 'ITAPAJE' ~ 'ITAPAGE',
-    comarca_secao == 'PORTO REAL / QUATIS' ~ 'PORTO REAL',
-    comarca_secao == 'CEILANDIA' ~ 'BRASILIA',
-    is.na(comarca_secao) ~ NA_character_,
-    TRUE ~ comarca_secao
-  ))) %>% 
-  filter(!is.na(comarca_secao)) %>% 
-  inner_join(pnud_muni, c('tribunal' = 'ufn', 'comarca_secao' = 'municipio')) %>% 
-  distinct(arq_processo, .keep_all = TRUE) %>% 
-  group_by(tribunal, comarca_secao) %>% 
-  summarise(nprocs = n(), pop = first(popt)) 
-
-tidy_cnc_coma %>% 
-  ungroup() %>% 
-  mutate(tx = nprocs / pop * 100000) %>%
-  # filter(pop > 100000) %>% 
-  arrange(desc(tx)) %>% 
-  mutate(tx = round(tx, 2)) %>% 
-  head(30) %>% 
-  knitr::kable(booktabs = TRUE, 
-               caption = '30 comarcas com maior taxa de processos por 100 mil habitantes.')
-```
-
-A Tabela \@ref(tab:coma2) mostra as 30 comarcas com mais de 100 mil habitantes com as maiores taxas. Podemos notar uma grande concentração de comarcas do Paraná.
-
-```{r coma2}
-tidy_cnc_coma %>% 
-  ungroup() %>% 
-  mutate(tx = nprocs / pop * 100000) %>%
-  # filter(pop > 100000) %>% 
-  arrange(desc(tx)) %>% 
-  mutate(tx = round(tx, 2)) %>% 
-  filter(pop > 100000) %>% 
-  head(30) %>% 
-  knitr::kable(booktabs = TRUE, 
-               caption = '30 comarcas com mais de 100 mil habitantes e maiores taxa de processos por 100 mil habitantes.')
-```
-
-
-A Tabela \@ref(tab:coma3) mostra as duas comarcas com maior taxa de processos por 100 mil habitantes em cada estado.
-
-```{r coma3}
-tidy_cnc_coma %>% 
-  ungroup() %>% 
-  mutate(tx = nprocs / pop * 100000) %>%
-  # filter(pop > 100000) %>% 
-  arrange(desc(tx)) %>% 
-  mutate(tx = round(tx, 2)) %>% 
-  filter(nprocs >= 5) %>% 
-  group_by(tribunal) %>% 
-  slice(1:2) %>% 
-  arrange(tribunal, desc(tx)) %>% 
-  knitr::kable(booktabs = TRUE, 
-               caption = 'Comarcas com maiores taxa de processos por 100 mil habitantes em cada estado (somente comarcas com 5 processos ou mais).')
 ```
