@@ -27,7 +27,10 @@ tidy_pags <- function(cnc_pags) {
 
 #' Tidyfica base que vem de parse_cnc_processos
 #'
-#' @import dplyr, lubridate, stringr, tidyr
+#' @import dplyr
+#' @import lubridate
+#' @import stringr
+#' @import tidyr
 #' @export
 tidy_processos <- function(cnc_processos) {
   cnc_processos_spr <- cnc_processos %>%
@@ -66,7 +69,11 @@ tidy_processos <- function(cnc_processos) {
 
 #' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos
 #'
-#' @import dplyr, lubridate, stringr, tidyr, janitor
+#' @import dplyr
+#' @import lubridate
+#' @import stringr
+#' @import tidyr
+#' @import janitor
 #' @export
 tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
   loc <- readr::locale(decimal_mark = ',', grouping_mark = '.')
@@ -165,7 +172,9 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
 
 #' Tidyfica base que vem de parse_cnc_pessoas_infos
 #'
-#' @import dplyr, tidyr, janitor
+#' @import dplyr
+#' @import tidyr
+#' @import janitor
 #' @export
 tidy_pessoas <- function(cnc_pessoa_infos) {
   data(cadmun, package = 'abjutils')
@@ -185,7 +194,11 @@ tidy_pessoas <- function(cnc_pessoa_infos) {
 
 #' Tidyfica base que vem de todas as bases
 #'
-#' @import dplyr, lubridate, stringr, tidyr, janitor
+#' @import dplyr
+#' @import lubridate
+#' @import stringr
+#' @import tidyr
+#' @import janitor
 #' @export
 tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos) {
   cnc1 <- tidy_condenacoes(cnc_condenacoes, cnc_pags, cnc_processos)
@@ -196,3 +209,17 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     inner_join(cnc3, 'id_processo')
   tidy_cnc
 }
+
+
+#' Base tidy do CNC
+#'
+#' Banco de dados contendo 57 infos de uma base de 35,977 variaveis de interesse.
+#'
+#' @format A data frame with 35977 rows and 57 variables:
+#' \describe{
+#'   \item{a}{a}
+#'   \item{b}{b}
+#'   ...
+#' }
+#' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
+"tidy_cnc"

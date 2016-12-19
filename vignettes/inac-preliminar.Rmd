@@ -244,3 +244,102 @@ tidy_cnc %>%
                caption = 'Estatísticas descritivas dos valores das multas por esfera do processo.')
 ```
 
+## Distribuição geográfica dos processos
+
+Podemos identificar a comarca somente dos processos estaduais de primeiro grau. A Tabela \@ref(tab:coma) mostra as 30 comarcas com maior taxa de processos por 100 mil habitantes.
+
+```{r coma}
+# data(cadmun, package = 'abjutils')
+data(pnud_muni, package = 'abjutils')
+pnud_muni %<>% 
+  as_tibble() %>% 
+  filter(ano == 2010) %>% 
+  select(ufn, municipio, popt) %>% 
+  mutate(municipio = toupper(abjutils::rm_accent(municipio)))
+
+# pnud_muni %>% 
+  # filter(stringr::str_detect(municipio, 'TRES RIOS'))
+
+# a %>% 
+#   count(tribunal, comarca_secao) %>% 
+#   anti_join(pnud_muni, c('tribunal' = 'ufn', 'comarca_secao' = 'municipio')) %>% 
+#   arrange(desc(n))
+
+tr <- 'Tribunal de Justiça d[eo]|Estado d[eoa]|e dos Territórios'
+tidy_cnc_coma <- tidy_cnc %>% 
+  filter(esfera_processo == 'Estadual', instancia == '1 grau') %>%
+  mutate(tribunal = stringr::str_replace_all(tribunal, tr, ''),
+         tribunal = stringr::str_trim(tribunal),
+         comarca_secao = toupper(abjutils::rm_accent(comarca_secao))) %>% 
+  mutate(comarca_secao = with(., case_when(
+    comarca_secao == 'CAPITAL' ~ 'RIO DE JANEIRO',
+    comarca_secao == 'GAMA' ~ 'BRASILIA',
+    comarca_secao == 'TRES RIOS/AREAL/LEVY GASPARIAN' ~ 'TRES RIOS',
+    comarca_secao == 'CAMPO GRANDE' & tribunal == 'Rio Grande do Norte' ~ 'AUGUSTO SEVERO',
+    comarca_secao == 'MOJI-MIRIM' ~ 'MOJI MIRIM',
+    comarca_secao == 'SANTO ANTONIO DE PADUA/APERIBE' ~ 'SANTO ANTONIO DE PADUA',
+    comarca_secao == 'ELDORADO PAULISTA' & tribunal == 'São Paulo' ~ 'ELDORADO',
+    comarca_secao == 'CAMBUCI/SAO JOSE DE UBA' ~ 'CAMBUCI',
+    comarca_secao == 'AREZ' ~ 'ARES',
+    comarca_secao == 'NATIVIDADE/VARRE-SAI' ~ 'NATIVIDADE',
+    comarca_secao == 'CARAPEBUS/QUISSAMA' ~ 'CARAPEBUS',
+    comarca_secao == 'EMBU DAS ARTES' ~ 'EMBU',
+    comarca_secao == 'NOVA IGUACU/MESQUITA' ~ 'NOVA IGUACU',
+    comarca_secao == 'JABUTICATUBAS' ~ 'JABOTICATUBAS',
+    comarca_secao == 'IPAUCU' ~ 'IPAUSSU',
+    comarca_secao == 'NUCLEO BANDEIRANTE' ~ 'BRASILIA',
+    comarca_secao == 'ITAPAJE' ~ 'ITAPAGE',
+    comarca_secao == 'PORTO REAL / QUATIS' ~ 'PORTO REAL',
+    comarca_secao == 'CEILANDIA' ~ 'BRASILIA',
+    is.na(comarca_secao) ~ NA_character_,
+    TRUE ~ comarca_secao
+  ))) %>% 
+  filter(!is.na(comarca_secao)) %>% 
+  inner_join(pnud_muni, c('tribunal' = 'ufn', 'comarca_secao' = 'municipio')) %>% 
+  distinct(arq_processo, .keep_all = TRUE) %>% 
+  group_by(tribunal, comarca_secao) %>% 
+  summarise(nprocs = n(), pop = first(popt)) 
+
+tidy_cnc_coma %>% 
+  ungroup() %>% 
+  mutate(tx = nprocs / pop * 100000) %>%
+  # filter(pop > 100000) %>% 
+  arrange(desc(tx)) %>% 
+  mutate(tx = round(tx, 2)) %>% 
+  head(30) %>% 
+  knitr::kable(booktabs = TRUE, 
+               caption = '30 comarcas com maior taxa de processos por 100 mil habitantes.')
+```
+
+A Tabela \@ref(tab:coma2) mostra as 30 comarcas com mais de 100 mil habitantes com as maiores taxas. Podemos notar uma grande concentração de comarcas do Paraná.
+
+```{r coma2}
+tidy_cnc_coma %>% 
+  ungroup() %>% 
+  mutate(tx = nprocs / pop * 100000) %>%
+  # filter(pop > 100000) %>% 
+  arrange(desc(tx)) %>% 
+  mutate(tx = round(tx, 2)) %>% 
+  filter(pop > 100000) %>% 
+  head(30) %>% 
+  knitr::kable(booktabs = TRUE, 
+               caption = '30 comarcas com mais de 100 mil habitantes e maiores taxa de processos por 100 mil habitantes.')
+```
+
+
+A Tabela \@ref(tab:coma3) mostra as duas comarcas com maior taxa de processos por 100 mil habitantes em cada estado.
+
+```{r coma3}
+tidy_cnc_coma %>% 
+  ungroup() %>% 
+  mutate(tx = nprocs / pop * 100000) %>%
+  # filter(pop > 100000) %>% 
+  arrange(desc(tx)) %>% 
+  mutate(tx = round(tx, 2)) %>% 
+  filter(nprocs >= 5) %>% 
+  group_by(tribunal) %>% 
+  slice(1:2) %>% 
+  arrange(tribunal, desc(tx)) %>% 
+  knitr::kable(booktabs = TRUE, 
+               caption = 'Comarcas com maiores taxa de processos por 100 mil habitantes em cada estado (somente comarcas com 5 processos ou mais).')
+```

@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/abjur/cnc.svg?branch=master)](https://travis-ci.org/abjur/cnc)
+
 # cnc
 
 Scraper do Cadastro Nacional de Condenações Cíveis por Ato de Improbidade Administrativa e Inelegibilidade - CNJ.

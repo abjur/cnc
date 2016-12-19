@@ -1,22 +1,27 @@
 Package: cnc
-Title: Baixa dados do Cadastro Nacional de Condenações Cíveis por Ato de Improbidade Administrativa e Inelegibilidade - CNJ.
+Title: Baixa dados do Cadastro Nacional de Condenações Cíveis por Ato de Improbidade Administrativa e Inelegibilidade - CNJ
 Version: 0.0.0.9000
 Authors@R: person("Julio", "Trecenti", email = "jtrecenti@abjur.org.br", role = c("aut", "cre"))
-Description: Scraper do Cadastro Nacional de Condenações Cíveis por Ato de Improbidade Administrativa e Inelegibilidade - CNJ.
+Description: Scraper do Cadastro Nacional de Condenações 
+    Cíveis por Ato de Improbidade Administrativa e 
+    Inelegibilidade - CNJ.
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.3.1)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 5.0.1
-Imports: magrittr,
+Imports: tidyverse,
+    magrittr,
     tibble,
     dplyr,
     xml2,
     rvest,
     lubridate,
     tidyr,
-    stringr
+    stringr,
+    janitor,
+    ggplot2
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
