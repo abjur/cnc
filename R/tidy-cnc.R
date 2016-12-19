@@ -301,13 +301,3 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
 "tidy_cnc"
 
-
-# load('/home/jtrecenti/tidy_cnc_old.rda')
-# toasc <- stringi::stri_enc_toascii
-# tidy_cnc <- tidy_cnc %>%
-#   dplyr::mutate_all(dplyr::funs(iconv(., to = 'UTF-8'))) %>%
-#   readr::type_convert() %>%
-#   dplyr::mutate_all(dplyr::funs(toasc(.))) %>%
-#   readr::type_convert()
-# dplyr::glimpse(tidy_cnc)
-# devtools::use_data(tidy_cnc, overwrite = T)
