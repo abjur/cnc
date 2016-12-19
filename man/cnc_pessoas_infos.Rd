@@ -7,9 +7,9 @@
 cnc_pessoas_infos(d_pessoas, path = "data-raw/pessoas_infos")
 }
 \arguments{
-\item{path}{caminho da pasta onde os arquivos HTML serão salvos. Se a pasta não existir, será criada.}
+\item{d_pessoas}{retornados pela função \code{\link{parse_pessoas}}.}
 
-\item{dados}{retornados pela função \code{\link{parse_pessoas}}.}
+\item{path}{caminho da pasta onde os arquivos HTML serão salvos. Se a pasta não existir, será criada.}
 }
 \value{
 \code{data.frame} indicando "OK" se baixou corretamente e "arquivo existe" se o arquivo já existe.

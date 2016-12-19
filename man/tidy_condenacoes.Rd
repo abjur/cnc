@@ -6,7 +6,14 @@
 \usage{
 tidy_condenacoes(cnc_condenacoes, cnc_pags, cnc_processos)
 }
+\arguments{
+\item{cnc_condenacoes}{base raw de condenações.}
+
+\item{cnc_pags}{base raw das páginas.}
+
+\item{cnc_processos}{base raw dos processos.}
+}
 \description{
-Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos
+Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
 }
 

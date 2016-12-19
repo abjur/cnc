@@ -5,9 +5,63 @@
 \title{Tidyfica base que vem de todas as bases}
 \format{A data frame with 35977 rows and 57 variables:
 \describe{
-  \item{a}{a}
-  \item{b}{b}
-  ...
+   \item{arq_pag}{arq_pag}
+   \item{id_pag}{id_pag}
+   \item{arq}{arq}
+   \item{id_condenacao}{id_condenacao}
+   \item{id_processo}{id_processo}
+   \item{id_pessoa}{id_pessoa}
+   \item{tipo_pena}{tipo_pena}
+   \item{dt_pena}{dt_pena}
+   \item{assunto_cod_1}{assunto_cod_1}
+   \item{assunto_cod_2}{assunto_cod_2}
+   \item{assunto_cod_3}{assunto_cod_3}
+   \item{assunto_cod_4}{assunto_cod_4}
+   \item{assunto_cod_5}{assunto_cod_5}
+   \item{assunto_nm_1}{assunto_nm_1}
+   \item{assunto_nm_2}{assunto_nm_2}
+   \item{assunto_nm_3}{assunto_nm_3}
+   \item{assunto_nm_4}{assunto_nm_4}
+   \item{assunto_nm_5}{assunto_nm_5}
+   \item{teve_inelegivel}{teve_inelegivel}
+   \item{teve_multa}{teve_multa}
+   \item{teve_pena}{teve_pena}
+   \item{teve_perda_bens}{teve_perda_bens}
+   \item{teve_perda_cargo}{teve_perda_cargo}
+   \item{teve_proibicao}{teve_proibicao}
+   \item{teve_ressarcimento}{teve_ressarcimento}
+   \item{teve_suspensao}{teve_suspensao}
+   \item{vl_multa}{vl_multa}
+   \item{vl_perda_bens}{vl_perda_bens}
+   \item{vl_ressarcimento}{vl_ressarcimento}
+   \item{duracao_pena}{duracao_pena}
+   \item{duracao_proibicao}{duracao_proibicao}
+   \item{duracao_suspensao}{duracao_suspensao}
+   \item{de_pena}{de_pena}
+   \item{de_proibicao}{de_proibicao}
+   \item{de_suspensao}{de_suspensao}
+   \item{ate_pena}{ate_pena}
+   \item{ate_proibicao}{ate_proibicao}
+   \item{ate_suspensao}{ate_suspensao}
+   \item{arq_pessoa}{arq_pessoa}
+   \item{tipo_pessoa}{tipo_pessoa}
+   \item{nm_pessoa}{nm_pessoa}
+   \item{sexo}{sexo}
+   \item{publico}{publico}
+   \item{esfera}{esfera}
+   \item{orgao}{orgao}
+   \item{cargo}{cargo}
+   \item{uf}{uf}
+   \item{cod}{cod}
+   \item{arq_processo}{arq_processo}
+   \item{dt_cadastro}{dt_cadastro}
+   \item{n_processo}{n_processo}
+   \item{esfera_processo}{esfera_processo}
+   \item{tribunal}{tribunal}
+   \item{instancia}{instancia}
+   \item{comarca_secao}{comarca_secao}
+   \item{vara_camara}{vara_camara}
+   \item{dt_propositura}{dt_propositura}
 }}
 \source{
 \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
@@ -16,6 +70,15 @@
 tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 
 tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
+}
+\arguments{
+\item{cnc_condenacoes}{base raw cnc_condenacoes}
+
+\item{cnc_pags}{base raw cnc_pags}
+
+\item{cnc_processos}{base raw cnc_processos}
+
+\item{cnc_pessoa_infos}{base raw cnc_pessoa_infos}
 }
 \description{
 Tidyfica base que vem de todas as bases

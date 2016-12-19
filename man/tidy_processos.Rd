@@ -6,7 +6,10 @@
 \usage{
 tidy_processos(cnc_processos)
 }
+\arguments{
+\item{cnc_processos}{base de dados raw dos processos.}
+}
 \description{
-Tidyfica base que vem de parse_cnc_processos
+Tidyfica base que vem de parse_cnc_processos.
 }
 

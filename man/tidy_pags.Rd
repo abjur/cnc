@@ -6,7 +6,10 @@
 \usage{
 tidy_pags(cnc_pags)
 }
+\arguments{
+\item{cnc_pags}{base de dados raw das paginas do CNC.}
+}
 \description{
-Tidyfica base que vem de parse_cnc_pags
+Tidyfica base que vem de parse_cnc_pags.
 }
 
