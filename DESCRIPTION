@@ -30,7 +30,8 @@ Imports: tidyverse,
     httr,
     forcats,
     readr,
-    bookdown
+    bookdown,
+    roxygen2 (>= 5.0.1)
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
