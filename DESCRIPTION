@@ -29,7 +29,8 @@ Imports: tidyverse,
     scales,
     httr,
     forcats,
-    readr
+    readr,
+    bookdown
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
