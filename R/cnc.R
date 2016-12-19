@@ -121,7 +121,7 @@ cnc_processos <- function(dados, path = 'data-raw/processos') {
 #' Baixa HTMLs de pesquisas do tipo
 #' \url{http://www.cnj.jus.br/improbidade_adm/visualizar_condenacao.php?seq_condenacao=1&rs=getDadosParte&rst=&rsrnd=0&rsargs[]=1}
 #'
-#' @param dados retornados pela função \code{\link{parse_pessoas}}.
+#' @param d_pessoas retornados pela função \code{\link{parse_pessoas}}.
 #' @inheritParams cnc_pags
 #'
 #' @return \code{data.frame} indicando "OK" se baixou corretamente e "arquivo existe" se o arquivo já existe.
