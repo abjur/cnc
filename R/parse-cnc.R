@@ -100,11 +100,14 @@ parse_pessoa_um <- function(arq) {
   tipo_pena <- h %>%
     rvest::html_node(xpath = '//input[@type="radio" and @checked="checked"]') %>%
     rvest::html_attr('value')
-  tipo_pena <- ifelse(tipo_pena == 'J', 'Trânsito em julgado', 'Órgão colegiado')
+  tipo_pena <- ifelse(tipo_pena == 'J',
+                      'Tr\032nsito em julgado', '\032rg\032o colegiado')
   tab_condenacao <- h %>%
     rvest::html_nodes(xpath = '//table[@width="700px" and @align="center"]//tr[not(@style="display: none;")]') %>% {
       x <- .
-      i <- x %>% rvest::html_text() %>% stringr::str_detect('INFORMAÇÕES SOBRE A CONDENAÇÃO') %>% which()
+      i <- x %>% rvest::html_text() %>%
+        stringr::str_detect("INFORMA\032\032ES SOBRE A CONDENA\032\032O") %>%
+        which()
       x[(1+i):length(x)]
     } %>%
     lapply(function(x) {
