@@ -10,6 +10,10 @@ tidy_nm <- function(x) {
 
 #' Tidyfica base que vem de parse_cnc_pags
 #'
+#' Tidyfica base que vem de parse_cnc_pags.
+#'
+#' @param cnc_pags base de dados raw das paginas do CNC.
+#'
 #' @export
 tidy_pags <- function(cnc_pags) {
   cnc_pags_tidy <- cnc_pags %>%
@@ -27,8 +31,13 @@ tidy_pags <- function(cnc_pags) {
 
 #' Tidyfica base que vem de parse_cnc_processos
 #'
+#' Tidyfica base que vem de parse_cnc_processos.
+#'
+#' @param cnc_processos base de dados raw dos processos.
+#'
 #' @import dplyr
-#' @import lubridate
+#' @importFrom lubridate dmy
+#' @importFrom lubridate dmy_hms
 #' @import stringr
 #' @import tidyr
 #' @export
@@ -69,11 +78,18 @@ tidy_processos <- function(cnc_processos) {
 
 #' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos
 #'
+#' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
+#'
+#' @param cnc_condenacoes base raw de condenações.
+#' @param cnc_pags base raw das páginas.
+#' @param cnc_processos base raw dos processos.
+#'
 #' @import dplyr
-#' @import lubridate
+#' @importFrom lubridate dmy
 #' @import stringr
 #' @import tidyr
 #' @import janitor
+#'
 #' @export
 tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
   loc <- readr::locale(decimal_mark = ',', grouping_mark = '.')
@@ -81,7 +97,7 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
                      '[[:space:]]+', '[[:space:]]+', '[[:space:]]+',
                      '[[:space:]]+', '[[:space:]]+', '[[:space:]]+')
   re_pena_de <- 'De[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
-  re_pena_ate <- 'Até[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
+  re_pena_ate <- 'At\032[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
   calcula_pena <- function(pena_txt) {
     conta <- function(x) {
       x <- as.numeric(x)
@@ -165,19 +181,21 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
            starts_with('teve_'),
            # qual o valor?
            starts_with('vl_'),
-           # duracao, de, até
+           # duracao, de, at\032
            starts_with('duracao_'), starts_with('de_'), starts_with('ate_'))
   cnc_condenacoes_tidy
 }
 
 #' Tidyfica base que vem de parse_cnc_pessoas_infos
 #'
+#' @param cnc_pessoa_infos base raw cnc_pessoa_infos
+#'
 #' @import dplyr
 #' @import tidyr
 #' @import janitor
 #' @export
 tidy_pessoas <- function(cnc_pessoa_infos) {
-  data(cadmun, package = 'abjutils')
+  data(cadmun, package = 'abjutils', envir = parent.env())
   cnc_pessoa_tidy <- cnc_pessoa_infos %>%
     spread(key, value) %>%
     rename(arq_pessoa = arq, id_pessoa = id) %>%
@@ -194,8 +212,13 @@ tidy_pessoas <- function(cnc_pessoa_infos) {
 
 #' Tidyfica base que vem de todas as bases
 #'
+#'
+#' @param cnc_condenacoes base raw cnc_condenacoes
+#' @param cnc_pags base raw cnc_pags
+#' @param cnc_processos base raw cnc_processos
+#' @param cnc_pessoa_infos base raw cnc_pessoa_infos
+#'
 #' @import dplyr
-#' @import lubridate
 #' @import stringr
 #' @import tidyr
 #' @import janitor
@@ -217,9 +240,74 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'
 #' @format A data frame with 35977 rows and 57 variables:
 #' \describe{
-#'   \item{a}{a}
-#'   \item{b}{b}
-#'   ...
+#'    \item{arq_pag}{arq_pag}
+#'    \item{id_pag}{id_pag}
+#'    \item{arq}{arq}
+#'    \item{id_condenacao}{id_condenacao}
+#'    \item{id_processo}{id_processo}
+#'    \item{id_pessoa}{id_pessoa}
+#'    \item{tipo_pena}{tipo_pena}
+#'    \item{dt_pena}{dt_pena}
+#'    \item{assunto_cod_1}{assunto_cod_1}
+#'    \item{assunto_cod_2}{assunto_cod_2}
+#'    \item{assunto_cod_3}{assunto_cod_3}
+#'    \item{assunto_cod_4}{assunto_cod_4}
+#'    \item{assunto_cod_5}{assunto_cod_5}
+#'    \item{assunto_nm_1}{assunto_nm_1}
+#'    \item{assunto_nm_2}{assunto_nm_2}
+#'    \item{assunto_nm_3}{assunto_nm_3}
+#'    \item{assunto_nm_4}{assunto_nm_4}
+#'    \item{assunto_nm_5}{assunto_nm_5}
+#'    \item{teve_inelegivel}{teve_inelegivel}
+#'    \item{teve_multa}{teve_multa}
+#'    \item{teve_pena}{teve_pena}
+#'    \item{teve_perda_bens}{teve_perda_bens}
+#'    \item{teve_perda_cargo}{teve_perda_cargo}
+#'    \item{teve_proibicao}{teve_proibicao}
+#'    \item{teve_ressarcimento}{teve_ressarcimento}
+#'    \item{teve_suspensao}{teve_suspensao}
+#'    \item{vl_multa}{vl_multa}
+#'    \item{vl_perda_bens}{vl_perda_bens}
+#'    \item{vl_ressarcimento}{vl_ressarcimento}
+#'    \item{duracao_pena}{duracao_pena}
+#'    \item{duracao_proibicao}{duracao_proibicao}
+#'    \item{duracao_suspensao}{duracao_suspensao}
+#'    \item{de_pena}{de_pena}
+#'    \item{de_proibicao}{de_proibicao}
+#'    \item{de_suspensao}{de_suspensao}
+#'    \item{ate_pena}{ate_pena}
+#'    \item{ate_proibicao}{ate_proibicao}
+#'    \item{ate_suspensao}{ate_suspensao}
+#'    \item{arq_pessoa}{arq_pessoa}
+#'    \item{tipo_pessoa}{tipo_pessoa}
+#'    \item{nm_pessoa}{nm_pessoa}
+#'    \item{sexo}{sexo}
+#'    \item{publico}{publico}
+#'    \item{esfera}{esfera}
+#'    \item{orgao}{orgao}
+#'    \item{cargo}{cargo}
+#'    \item{uf}{uf}
+#'    \item{cod}{cod}
+#'    \item{arq_processo}{arq_processo}
+#'    \item{dt_cadastro}{dt_cadastro}
+#'    \item{n_processo}{n_processo}
+#'    \item{esfera_processo}{esfera_processo}
+#'    \item{tribunal}{tribunal}
+#'    \item{instancia}{instancia}
+#'    \item{comarca_secao}{comarca_secao}
+#'    \item{vara_camara}{vara_camara}
+#'    \item{dt_propositura}{dt_propositura}
 #' }
 #' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
 "tidy_cnc"
+
+
+# load('/home/jtrecenti/tidy_cnc_old.rda')
+# toasc <- stringi::stri_enc_toascii
+# tidy_cnc <- tidy_cnc %>%
+#   dplyr::mutate_all(dplyr::funs(iconv(., to = 'UTF-8'))) %>%
+#   readr::type_convert() %>%
+#   dplyr::mutate_all(dplyr::funs(toasc(.))) %>%
+#   readr::type_convert()
+# dplyr::glimpse(tidy_cnc)
+# devtools::use_data(tidy_cnc, overwrite = T)
