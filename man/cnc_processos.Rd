@@ -18,4 +18,3 @@ cnc_processos(dados, path = "data-raw/processos")
 Baixa HTMLs de pesquisas do tipo
 \url{http://www.cnj.jus.br/improbidade_adm/visualizar_processo.php?seq_processo=9421}
 }
-

@@ -25,4 +25,3 @@ Transforma HTMLs de pesquisas do tipo
 \url{http://www.cnj.jus.br/improbidade_adm/visualizar_condenacao.php?seq_condenacao=1&rs=getDadosParte&rst=&rsrnd=0&rsargs[]=1}
 em um data.frame com dados estruturados.
 }
-

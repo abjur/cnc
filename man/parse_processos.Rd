@@ -25,4 +25,3 @@ Transforma HTMLs de pesquisas do tipo
 \url{http://www.cnj.jus.br/improbidade_adm/visualizar_processo.php?seq_processo=9421}
 em um data.frame com dados estruturados.
 }
-

@@ -12,4 +12,3 @@ tidy_pessoas(cnc_pessoa_infos)
 \description{
 Tidyfica base que vem de parse_cnc_pessoas_infos
 }
-

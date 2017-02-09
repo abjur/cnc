@@ -16,4 +16,3 @@ tidy_condenacoes(cnc_condenacoes, cnc_pags, cnc_processos)
 \description{
 Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
 }
-
