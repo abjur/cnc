@@ -230,7 +230,49 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
   tidy_cnc <- cnc1 %>%
     inner_join(cnc2, 'id_pessoa') %>%
     inner_join(cnc3, 'id_processo')
-  tidy_cnc
+
+  data(cadmun, 'abjData')
+  data(pnud_uf, package = 'abjData')
+  data(br_uf_map, package = 'abjData')
+
+  cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
+  pnud_uf %<>% filter(ano == 2010) %>%
+    select(uf, ufn, popt) %>%
+    mutate(uf = as.character(uf)) %>%
+    inner_join(cadmun, c('uf' = 'cod')) %>%
+    select(id = uf.y, ufn, popt)
+
+  regex_uf_estadual <- 'ça d[eo] (Estado d[oae] )?(.+)$'
+  regex_uf_federal <- pnud_uf %>%
+    with(ufn) %>%
+    {sprintf('(%s)|(%s)', ., abjutils::rm_accent(.))} %>%
+    paste(collapse = '|') %>%
+    regex(ignore_case = TRUE)
+
+
+  ufs_estadual <- tidy_cnc %>%
+    filter(esfera_processo == 'Estadual') %>%
+    mutate(ufn_processo = str_match(tribunal, regex_uf_estadual)[,3],
+           ufn_processo = str_replace_all(ufn_processo, ' e dos T.+', '')) %>%
+    inner_join(pnud_uf, c('ufn_processo' = 'ufn')) %>%
+    select(id_condenacao, uf_processo = id)
+
+
+  ufs_federal_1inst <- tidy_cnc %>%
+    filter(esfera_processo == 'Federal', instancia == '1 grau') %>%
+    mutate(ufn_processo = str_match_all(comarca_secao, regex_uf_federal) %>%
+             map_chr(~{
+               x <- as.character(.x[,-1])
+               x[x != ''][1]
+             })) %>%
+    mutate(ufn_processo = toupper(abjutils::rm_accent(ufn_processo))) %>%
+    inner_join(mutate(pnud_uf, ufn_processo = toupper(abjutils::rm_accent(ufn))),
+               'ufn_processo') %>%
+    select(id_condenacao, uf_processo = id)
+
+  tidy_cnc %>%
+    left_join(bind_rows(ufs_estadual, ufs_federal_1inst), 'id_condenacao') %>%
+    ungroup()
 }
 
 
