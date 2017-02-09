@@ -52,11 +52,13 @@ tidy_processos <- function(cnc_processos) {
   cnc_processos_tidy <- cnc_processos_spr %>%
     unite(secao, secao_judiciaria, subsecao, sep = '\n') %>%
     mutate(secao = if_else(secao == 'NA\nNA', NA_character_, secao)) %>%
-    mutate(secao = if_else(is.na(secao), comarca, secao)) %>%
+    mutate(secao = if_else(is.na(secao), comarca, secao))
+
+  cnc_processos_tidy %<>%
     mutate(instancia = if_else(
-      !is.na(`1_grau_justica_estadual`) | !is.na(`1_grau_justica_federal`), '1 grau',
+      !is.na(`1o_grau_justica_estadual`) | !is.na(`1o_grau_justica_federal`), '1 grau',
       if_else(
-        !is.na(`2_grau_justica_estadual`) | !is.na(`2_grau_justica_federal`), '2 grau',
+        !is.na(`2o_grau_justica_estadual`) | !is.na(`2o_grau_justica_federal`), '2 grau',
         if_else(!is.na(auditoria_militar), 'militar', 'superior'))
     )) %>%
     unite(tribunal, tribunal_de_justica_estadual:tribunal_superior) %>%
@@ -73,6 +75,7 @@ tidy_processos <- function(cnc_processos) {
            n_processo = num_do_processo,
            esfera_processo = esfera, tribunal, instancia, comarca_secao = secao,
            vara_camara, dt_propositura)
+
   cnc_processos_tidy
 }
 
@@ -195,7 +198,7 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
 #' @import janitor
 #' @export
 tidy_pessoas <- function(cnc_pessoa_infos) {
-  data(cadmun, package = 'abjutils', envir = parent.env())
+  data(cadmun, package = 'abjData')
   cnc_pessoa_tidy <- cnc_pessoa_infos %>%
     spread(key, value) %>%
     rename(arq_pessoa = arq, id_pessoa = id) %>%
@@ -231,7 +234,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     inner_join(cnc2, 'id_pessoa') %>%
     inner_join(cnc3, 'id_processo')
 
-  data(cadmun, 'abjData')
+  data(cadmun, package = 'abjData')
   data(pnud_uf, package = 'abjData')
   data(br_uf_map, package = 'abjData')
 
@@ -339,6 +342,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{comarca_secao}{comarca_secao}
 #'    \item{vara_camara}{vara_camara}
 #'    \item{dt_propositura}{dt_propositura}
+#'    \item{uf_processo}{uf_processo}
 #' }
 #' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
 "tidy_cnc"
