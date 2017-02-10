@@ -38,7 +38,7 @@ tidy_cnc %>%
 Agora vamos estudar a distribuição geográfica das pessoas. A Figura \@ref(fig:mapa1) mostra o volume de pessoas por estado. Obsevamos uma concentração maior em São Paulo, Minas Gerais e nos estados da região sul, além de Rondônia. Exceto por Rondônia, o resultado é esperado, já que grande parte da população fica nos estados citados.
 
 ```{r mapa1, warning=FALSE, message=FALSE, fig.cap = 'Volume de pessoas por Unidade Federativa.', out.width="60%", fig.align='center'}
-data(br_uf_map, package = 'abjutils')
+data(br_uf_map, package = 'abjData')
 p <- tidy_cnc %>% 
   distinct(id_pessoa, .keep_all = TRUE) %>% 
   count(id = uf) %>% 
@@ -58,8 +58,8 @@ p
 A Figura \@ref(fig:mapa2) mostra a taxa de pessoas por cem mil habitantes em cada estado. O resultado é surpreendente. Destacam-se o estados do Acre e Rondônia, concentrando 17 e 24 pessoas por cem mil habitantes, respectivamente. Outros estados com alta taxa são Roraima, Amapá, Tocantins, Rio Grande do Norte, Sergipe, Espírito Santo, Distrito Federal e Santa Catarina.
 
 ```{r mapa2, warning=FALSE, message=FALSE, fig.cap = 'Pessoas por cem mil habitantes em cada Unidade Federativa.', out.width="60%", fig.align='center'}
-data(pnud_uf, package = 'abjutils')
-data(cadmun, package = 'abjutils')
+data(pnud_uf, package = 'abjData')
+data(cadmun, package = 'abjData')
 cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
 pnud_uf %<>% filter(ano == 2010) %>% select(uf, popt) %>% 
   mutate(uf = as.character(uf)) %>% 

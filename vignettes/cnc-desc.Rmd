@@ -30,7 +30,8 @@ library(tidyverse)
 library(stringr)
 library(lubridate)
 library(janitor)
-devtools::load_all('.')
+library(cnc)
+
 cnc_pags <- readRDS('../data-raw/cnc_pags.rds')
 cnc_condenacoes <- readRDS('../data-raw/cnc_pessoas.rds')
 cnc_pessoa_infos <- readRDS('../data-raw/cnc_pessoa_infos.rds')
@@ -174,7 +175,7 @@ A base apresenta algumas inconsistências. Primeiramente, temos 826 pessoas clas
 Para facilitar as análises, construímos também uma base unificada, contendo todas as informações de condenações, pessoas e processos. Nessa base, informações sobre pessoas e processos aparecem duplicadas quando fazem parte de mais de uma condenação. A base possui 35.977 linhas (a mesma quantidade da base de condenações) e 57 colunas.
 
 ```{r eval=FALSE, echo=FALSE}
-cnc_tidy <- tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
+cnc_tidy <- cnc::tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 ```
 
 # Próximos passos

@@ -25,4 +25,3 @@ parse_pags(arqs, verbose = TRUE)
 \description{
 Transforma arquivo HTML de uma página do CNC em um data.frame.
 }
-

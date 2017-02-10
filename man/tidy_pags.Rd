@@ -12,4 +12,3 @@ tidy_pags(cnc_pags)
 \description{
 Tidyfica base que vem de parse_cnc_pags.
 }
-

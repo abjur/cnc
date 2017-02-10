@@ -19,4 +19,3 @@ Acessa uma URL, roda javascripts e baixa página usando PhantomJS.
 Para funcionar, é necessário instalar o PhamtomJS
 (\url{http://phantomjs.org/download.html}).
 }
-

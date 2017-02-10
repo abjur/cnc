@@ -18,4 +18,3 @@ cnc_pessoas_infos(d_pessoas, path = "data-raw/pessoas_infos")
 Baixa HTMLs de pesquisas do tipo
 \url{http://www.cnj.jus.br/improbidade_adm/visualizar_condenacao.php?seq_condenacao=1&rs=getDadosParte&rst=&rsrnd=0&rsargs[]=1}
 }
-

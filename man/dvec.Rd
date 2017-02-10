@@ -16,4 +16,3 @@ dvec(fun, arqs, verbose = TRUE)
 \description{
 Vetoriza um parser (função) para um vetor de arquivos.
 }
-

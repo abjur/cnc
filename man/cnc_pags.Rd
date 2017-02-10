@@ -18,4 +18,3 @@ cnc_pags(path = "data-raw/pags", pags = 1:2399)
 Acessa todas as páginas do CNC indicadas e salva em arquivos HTML. Acessa páginas do tipo
 \url{http://www.cnj.jus.br/improbidade_adm/consultar_requerido.php?validar=form&rs=pesquisarRequeridoGetTabela&rst=&rsrnd=0&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=I&rsargs[]=0&rsargs[]=POSICAO_INICIAL_PAGINACAO_PHP1&rsargs[]=QUANTIDADE_REGISTROS_PAGINACAO15}
 }
-

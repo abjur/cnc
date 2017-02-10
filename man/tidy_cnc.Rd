@@ -2,6 +2,7 @@
 % Please edit documentation in R/tidy-cnc.R
 \name{tidy_cnc}
 \alias{tidy_cnc}
+\alias{tidy_cnc}
 \title{Tidyfica base que vem de todas as bases}
 \format{A data frame with 35977 rows and 57 variables:
 \describe{
@@ -85,4 +86,3 @@ Tidyfica base que vem de todas as bases
 
 Banco de dados contendo 57 infos de uma base de 35,977 variaveis de interesse.
 }
-
