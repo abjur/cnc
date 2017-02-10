@@ -11,8 +11,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.0
-Remotes: abjur/abjutils,
-abjur/abjData
+Remotes: abjur/abjutils, abjur/abjData
 Imports: tidyverse,
     abjData,
     abjutils,
