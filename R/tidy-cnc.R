@@ -296,6 +296,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     group_by(arq) %>%
     mutate(assunto_penal_any = any(penal_lgl),
            assunto_penal_all = all(penal_lgl)) %>%
+    select(-penal_lgl) %>%
     spread(rank,assunto) %>%
     escape_unicode_df()
 }
@@ -361,7 +362,6 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{vara_camara}{vara_camara}
 #'    \item{dt_propositura}{dt_propositura}
 #'    \item{uf_processo}{uf_processo}
-#'    \item{penal_lgl}{penal_lgl}
 #'    \item{assunto_penal_any}{assunto_penal_any}
 #'    \item{assunto_penal_all}{assunto_penal_all}
 #'    \item{assunto_nm_1}{assunto_nm_1}
