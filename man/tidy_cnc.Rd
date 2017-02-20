@@ -31,6 +31,8 @@
    \item{vl_perda_bens}{vl_perda_bens}
    \item{vl_ressarcimento}{vl_ressarcimento}
    \item{duracao_pena_regex}{duracao_pena_regex}
+   \item{duracao_proibicao_regex}{duracao_proibicao_regex}
+   \item{duracao_suspensao_regex}{duracao_suspensao_regex}
    \item{duracao_pena}{duracao_pena}
    \item{duracao_proibicao}{duracao_proibicao}
    \item{duracao_suspensao}{duracao_suspensao}
@@ -60,7 +62,6 @@
    \item{vara_camara}{vara_camara}
    \item{dt_propositura}{dt_propositura}
    \item{uf_processo}{uf_processo}
-   \item{penal_lgl}{penal_lgl}
    \item{assunto_penal_any}{assunto_penal_any}
    \item{assunto_penal_all}{assunto_penal_all}
    \item{assunto_nm_1}{assunto_nm_1}
