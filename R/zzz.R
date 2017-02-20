@@ -15,4 +15,16 @@ globalVariables(c('.','1_grau_justica_estadual','1_grau_justica_federal','2_grau
 'runif','secao','secao_judiciaria','setNames','sexo','situacao','subsecao',
 'suspensao_dos_direitos_politicos','suspensao_txt','tipo_pena','tipo_pessoa',
 'tribunal','tribunal_de_justica_estadual','tribunal_superior','uf','v','value',
-'vara_camara'))
+'vara_camara','br_uf_map','pnud_uf','%>%','ano','ufn','popt','uf.y','esfera_processo',
+'ufn_processo','comarca_secao','map_chr','n1','nivel','assunto','penal_lgl','ate_pena',
+'de_pena','%<>%'))
+
+escape_unicode_df <- function(df){
+  df_res <- df
+  for(i in 1:ncol(df)){
+    if(is.character(df[[i]])){
+      df_res[[i]] <- iconv(df[[i]],to = 'UTF-8')
+    }
+  }
+  df_res
+}
