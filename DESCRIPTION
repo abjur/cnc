@@ -10,8 +10,8 @@ Depends:
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.0
-Remotes: abjur/abjutils, abjur/abjData
+RoxygenNote: 6.0.1
+Remotes: abjur/abjutils, abjur/abjData, abjur/tpur
 Imports: tidyverse,
     abjData,
     abjutils,
@@ -32,7 +32,9 @@ Imports: tidyverse,
     forcats,
     readr,
     bookdown,
-    roxygen2 (>= 5.0.1)
+    tpur,
+    roxygen2 (>= 5.0.1),
+    stringi
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
