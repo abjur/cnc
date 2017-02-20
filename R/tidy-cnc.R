@@ -56,9 +56,9 @@ tidy_processos <- function(cnc_processos) {
 
   cnc_processos_tidy %<>%
     mutate(instancia = if_else(
-      !is.na(`1o_grau_justica_estadual`) | !is.na(`1o_grau_justica_federal`), '1 grau',
+      !is.na(`1_grau_justica_estadual`) | !is.na(`1_grau_justica_federal`), '1 grau',
       if_else(
-        !is.na(`2o_grau_justica_estadual`) | !is.na(`2o_grau_justica_federal`), '2 grau',
+        !is.na(`2_grau_justica_estadual`) | !is.na(`2_grau_justica_federal`), '2 grau',
         if_else(!is.na(auditoria_militar), 'militar', 'superior'))
     )) %>%
     unite(tribunal, tribunal_de_justica_estadual:tribunal_superior) %>%
@@ -84,7 +84,7 @@ tidy_processos <- function(cnc_processos) {
 #' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
 #'
 #' @param cnc_condenacoes base raw de condenações.
-#' @param cnc_pags base raw das páginas.
+#' @param cnc_pags base raw das paginas.
 #' @param cnc_processos base raw dos processos.
 #'
 #' @import dplyr
@@ -100,7 +100,7 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
                      '[[:space:]]+', '[[:space:]]+', '[[:space:]]+',
                      '[[:space:]]+', '[[:space:]]+', '[[:space:]]+')
   re_pena_de <- 'De[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
-  re_pena_ate <- 'At\032[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
+  re_pena_ate <- 'At\u00e9[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
   calcula_pena <- function(pena_txt) {
     conta <- function(x) {
       x <- as.numeric(x)
@@ -142,9 +142,10 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
                               pena_privativa_de_liberdade_aplicada,
                               pena_privativa_de_liberdade),
            teve_pena = if_else(str_detect(pena_txt, 'SIM'), 'sim', pena_txt),
-           duracao_pena = calcula_pena(pena_txt),
+           duracao_pena_regex = calcula_pena(pena_txt),
            de_pena = dmy(str_match(pena_txt, re_pena_de)[, 2]),
-           ate_pena = dmy(str_match(pena_txt, re_pena_ate)[, 2])) %>%
+           ate_pena = dmy(str_match(pena_txt, re_pena_ate)[, 2]),
+           duracao_pena = as.numeric(ate_pena-de_pena)) %>%
     mutate(perda_bens = perda_de_bens_ou_valores_acrescidos_ilicitamente_ao_patrimonio,
            teve_perda_bens = if_else(str_detect(perda_bens, 'SIM'), 'sim', perda_bens),
            vl_perda_bens = if_else(str_detect(perda_bens, 'SIM'),
@@ -198,7 +199,7 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
 #' @import janitor
 #' @export
 tidy_pessoas <- function(cnc_pessoa_infos) {
-  data(cadmun, package = 'abjData')
+  data(cadmun, package = 'abjData',  envir = environment())
   cnc_pessoa_tidy <- cnc_pessoa_infos %>%
     spread(key, value) %>%
     rename(arq_pessoa = arq, id_pessoa = id) %>%
@@ -234,9 +235,9 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     inner_join(cnc2, 'id_pessoa') %>%
     inner_join(cnc3, 'id_processo')
 
-  data(cadmun, package = 'abjData')
-  data(pnud_uf, package = 'abjData')
-  data(br_uf_map, package = 'abjData')
+  data(cadmun, package = 'abjData', envir = environment())
+  data(pnud_uf, package = 'abjData', envir = environment())
+  data(br_uf_map, package = 'abjData', envir = environment())
 
   cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
   pnud_uf %<>% filter(ano == 2010) %>%
@@ -245,13 +246,12 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     inner_join(cadmun, c('uf' = 'cod')) %>%
     select(id = uf.y, ufn, popt)
 
-  regex_uf_estadual <- 'ça d[eo] (Estado d[oae] )?(.+)$'
+  regex_uf_estadual <- '\u00e7a d[eo] (Estado d[oae] )?(.+)$'
   regex_uf_federal <- pnud_uf %>%
     with(ufn) %>%
     {sprintf('(%s)|(%s)', ., abjutils::rm_accent(.))} %>%
     paste(collapse = '|') %>%
     regex(ignore_case = TRUE)
-
 
   ufs_estadual <- tidy_cnc %>%
     filter(esfera_processo == 'Estadual') %>%
@@ -259,7 +259,6 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
            ufn_processo = str_replace_all(ufn_processo, ' e dos T.+', '')) %>%
     inner_join(pnud_uf, c('ufn_processo' = 'ufn')) %>%
     select(id_condenacao, uf_processo = id)
-
 
   ufs_federal_1inst <- tidy_cnc %>%
     filter(esfera_processo == 'Federal', instancia == '1 grau') %>%
@@ -273,9 +272,32 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
                'ufn_processo') %>%
     select(id_condenacao, uf_processo = id)
 
-  tidy_cnc %>%
+  tidy_cnc <- tidy_cnc %>%
     left_join(bind_rows(ufs_estadual, ufs_federal_1inst), 'id_condenacao') %>%
     ungroup()
+
+  control_table <- tpur::control_table
+
+  tabela_assuntos <- tpur::download_table("assunto","estadual","primeiro grau") %>%
+    tpur::build_table()
+  # monta a tabela de assuntos separado pra debuggar mais facil
+
+  assuntos_penais <- tabela_assuntos %>%
+    filter(str_detect(n1, regex("penal", ignore_case = T))) %>%
+    select(dplyr::contains("n")) %>%
+    gather(nivel, assunto) %>%
+    distinct(assunto, .keep_all = T) %>%
+    with(assunto)
+
+  tidy_cnc %>%
+    gather(rank, assunto, dplyr::contains("assunto_nm")) %>%
+    filter(!is.na(assunto)) %>%
+    mutate(penal_lgl = assunto %in% assuntos_penais) %>%
+    group_by(arq) %>%
+    mutate(assunto_penal_any = any(penal_lgl),
+           assunto_penal_all = all(penal_lgl)) %>%
+    spread(rank,assunto) %>%
+    escape_unicode_df()
 }
 
 
@@ -298,11 +320,6 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{assunto_cod_3}{assunto_cod_3}
 #'    \item{assunto_cod_4}{assunto_cod_4}
 #'    \item{assunto_cod_5}{assunto_cod_5}
-#'    \item{assunto_nm_1}{assunto_nm_1}
-#'    \item{assunto_nm_2}{assunto_nm_2}
-#'    \item{assunto_nm_3}{assunto_nm_3}
-#'    \item{assunto_nm_4}{assunto_nm_4}
-#'    \item{assunto_nm_5}{assunto_nm_5}
 #'    \item{teve_inelegivel}{teve_inelegivel}
 #'    \item{teve_multa}{teve_multa}
 #'    \item{teve_pena}{teve_pena}
@@ -314,6 +331,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{vl_multa}{vl_multa}
 #'    \item{vl_perda_bens}{vl_perda_bens}
 #'    \item{vl_ressarcimento}{vl_ressarcimento}
+#'    \item{duracao_pena_regex}{duracao_pena_regex}
 #'    \item{duracao_pena}{duracao_pena}
 #'    \item{duracao_proibicao}{duracao_proibicao}
 #'    \item{duracao_suspensao}{duracao_suspensao}
@@ -343,6 +361,14 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{vara_camara}{vara_camara}
 #'    \item{dt_propositura}{dt_propositura}
 #'    \item{uf_processo}{uf_processo}
+#'    \item{penal_lgl}{penal_lgl}
+#'    \item{assunto_penal_any}{assunto_penal_any}
+#'    \item{assunto_penal_all}{assunto_penal_all}
+#'    \item{assunto_nm_1}{assunto_nm_1}
+#'    \item{assunto_nm_2}{assunto_nm_2}
+#'    \item{assunto_nm_3}{assunto_nm_3}
+#'    \item{assunto_nm_4}{assunto_nm_4}
+#'    \item{assunto_nm_5}{assunto_nm_5}
 #' }
 #' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
 "tidy_cnc"
