@@ -12,10 +12,10 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{r , warning=FALSE, message=FALSE}
+```{r , warning=FALSE, message=FALSE, eval = F}
 library(tidyverse)
 library(janitor)
-devtools::load_all()
+library(cnc)
 ```
 
 No relatório preliminar 01, mostramos como a base de dados foi baixada e o conteúdo da base depois após a fase de arrumação de dados. Neste documento, apresentaremos análises preliminares sobre duas quantidades de interesse na pesquisa: i) perfil dos condenados do CNC e ii) valores envolvidos nos processos (desagregado por divesos critérios).
@@ -24,7 +24,7 @@ No relatório preliminar 01, mostramos como a base de dados foi baixada e o cont
 
 A Tabela \@ref(tab:pfpj) mostra a quantidade de pessoas e processos por tipo de pessoa. Podemos observar que é bem maior a quantidade de pessoas físicas na base.
 
-```{r pfpj}
+```{r pfpj, eval = F}
 tidy_cnc %>% 
   mutate(tipo_pessoa = if_else(tipo_pessoa == 'F', 'Física', 'Jurídica')) %>% 
   group_by(tipo_pessoa) %>% 
@@ -37,7 +37,7 @@ tidy_cnc %>%
 
 Agora vamos estudar a distribuição geográfica das pessoas. A Figura \@ref(fig:mapa1) mostra o volume de pessoas por estado. Obsevamos uma concentração maior em São Paulo, Minas Gerais e nos estados da região sul, além de Rondônia. Exceto por Rondônia, o resultado é esperado, já que grande parte da população fica nos estados citados.
 
-```{r mapa1, warning=FALSE, message=FALSE, fig.cap = 'Volume de pessoas por Unidade Federativa.', out.width="60%", fig.align='center'}
+```{r mapa1, warning=FALSE, message=FALSE, fig.cap = 'Volume de pessoas por Unidade Federativa.', out.width="60%", fig.align='center', eval = F}
 data(br_uf_map, package = 'abjData')
 p <- tidy_cnc %>% 
   distinct(id_pessoa, .keep_all = TRUE) %>% 
@@ -57,7 +57,7 @@ p
 
 A Figura \@ref(fig:mapa2) mostra a taxa de pessoas por cem mil habitantes em cada estado. O resultado é surpreendente. Destacam-se o estados do Acre e Rondônia, concentrando 17 e 24 pessoas por cem mil habitantes, respectivamente. Outros estados com alta taxa são Roraima, Amapá, Tocantins, Rio Grande do Norte, Sergipe, Espírito Santo, Distrito Federal e Santa Catarina.
 
-```{r mapa2, warning=FALSE, message=FALSE, fig.cap = 'Pessoas por cem mil habitantes em cada Unidade Federativa.', out.width="60%", fig.align='center'}
+```{r mapa2, warning=FALSE, message=FALSE, fig.cap = 'Pessoas por cem mil habitantes em cada Unidade Federativa.', out.width="60%", fig.align='center', eval = F}
 data(pnud_uf, package = 'abjData')
 data(cadmun, package = 'abjData')
 cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
@@ -92,7 +92,7 @@ Na base de dados temos três variáveis sobre valores: i) pagamento de multas, i
 
 A Tabela \@ref(tab:tab1) mostra a proporção de condenações em que houve multa. Obseve que tivemos multas em aproximadamente um terço dos casos. No entanto, somente 9.817 casos possuem valores de multa maiores ou iguais a zero ou menores que um bilhão.
 
-```{r tab1, caption='tab1'}
+```{r tab1, caption='tab1', eval = F}
 tidy_cnc %>% 
   replace_na(list(teve_multa = 'não')) %>% 
   janitor::tabyl(teve_multa, sort = TRUE) %>% 
@@ -106,7 +106,7 @@ Como o valor é uma variável bastante assimétrica, é necessário elaborar alg
 
 [^percentil]: um percentil de $x$% é uma quantidade que faz com que $x$% das observações da amostra esteja abaixo desse valor.
 
-```{r perc, fig.cap="Gráfico quantil-quantil do valor da multa por tipo de pessoa (escala log).", out.width="80%", fig.align='center'}
+```{r perc, fig.cap="Gráfico quantil-quantil do valor da multa por tipo de pessoa (escala log).", out.width="80%", fig.align='center', eval = F}
 p <- tidy_cnc %>% 
   filter(teve_multa == 'sim', vl_multa < 1e9, vl_multa > 10) %>% 
   group_by(tipo_pessoa) %>% 
@@ -134,7 +134,7 @@ p
 
 A tabela \@ref(tab:maiorN) mostra as 20 pessoas com maior quantidade de multas. Observe que apesar de observarmos pessoas com pelo menos 12 multas cada, 97% do valor de multas está concentrado nas multas restantes.
 
-```{r maiorN}
+```{r maiorN, eval = F}
 tidy_cnc %>% 
   filter(teve_multa == 'sim', vl_multa < 1e9) %>% 
   mutate(nome = sprintf('%06s / %s', id_pessoa, toupper(nm_pessoa))) %>% 
@@ -155,7 +155,7 @@ tidy_cnc %>%
 
 A tabela \@ref(tab:maiorV) mostra os 20 casos com maior valor de multas. Observe que somente esses casos concentram quase metade do valor total das multas.
 
-```{r maiorV}
+```{r maiorV, eval = F}
 tidy_cnc %>% 
   filter(teve_multa == 'sim', vl_multa < 1e9) %>% 
   select(nome = nm_pessoa, tipo_pessoa, vl_multa) %>% 
