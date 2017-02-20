@@ -155,9 +155,10 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
     mutate(proibicao_txt = proibicao_de_contratar_com_o_poder_publico_ou_receber_incentivos_fiscais_ou_crediticios_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario,
            teve_proibicao = if_else(str_detect(proibicao_txt, 'SIM'), 'sim',
                                     proibicao_txt),
-           duracao_proibicao = calcula_pena(proibicao_txt),
+           duracao_proibicao_regex = calcula_pena(proibicao_txt),
            de_proibicao = dmy(str_match(proibicao_txt, re_pena_de)[, 2]),
-           ate_proibicao = dmy(str_match(proibicao_txt, re_pena_ate)[, 2])) %>%
+           ate_proibicao = dmy(str_match(proibicao_txt, re_pena_ate)[, 2]),
+           duracao_proibicao = as.numeric(ate_proibicao-de_proibicao)) %>%
     mutate(ressarcimento = ressarcimento_integral_do_dano,
            teve_ressarcimento = if_else(str_detect(ressarcimento, 'SIM'), 'sim',
                                         ressarcimento),
@@ -167,9 +168,10 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
     mutate(suspensao_txt = suspensao_dos_direitos_politicos,
            teve_suspensao = if_else(str_detect(suspensao_txt, 'SIM'), 'sim',
                                     suspensao_txt),
-           duracao_suspensao = calcula_pena(suspensao_txt),
+           duracao_suspensao_regex = calcula_pena(suspensao_txt),
            de_suspensao = dmy(str_match(suspensao_txt, re_pena_de)[, 2]),
            ate_suspensao = dmy(str_match(suspensao_txt, re_pena_ate)[, 2]),
+           duracao_suspensao = as.numeric(ate_suspensao-de_suspensao),
            comunicacao_tse = if_else(str_detect(suspensao_txt, 'Comunica.+SIM'),
                                      'sim', NA_character_)) %>%
     separate(cod_assunto, paste('assunto_cod', 1:5, sep = '_'),
@@ -298,7 +300,12 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
            assunto_penal_all = all(penal_lgl)) %>%
     select(-penal_lgl) %>%
     spread(rank,assunto) %>%
-    escape_unicode_df()
+    escape_unicode_df() %>%
+    ungroup() %>%
+    mutate_at(.funs = funs(ifelse(!is.na(.), TRUE, FALSE)),
+              .cols = vars(teve_inelegivel, teve_multa, teve_pena,
+                           teve_perda_bens, teve_perda_cargo, teve_proibicao,
+                           teve_ressarcimento, teve_suspensao))
 }
 
 
@@ -333,6 +340,8 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{vl_perda_bens}{vl_perda_bens}
 #'    \item{vl_ressarcimento}{vl_ressarcimento}
 #'    \item{duracao_pena_regex}{duracao_pena_regex}
+#'    \item{duracao_proibicao_regex}{duracao_proibicao_regex}
+#'    \item{duracao_suspensao_regex}{duracao_suspensao_regex}
 #'    \item{duracao_pena}{duracao_pena}
 #'    \item{duracao_proibicao}{duracao_proibicao}
 #'    \item{duracao_suspensao}{duracao_suspensao}
