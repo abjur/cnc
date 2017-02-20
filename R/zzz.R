@@ -17,7 +17,9 @@ globalVariables(c('.','1_grau_justica_estadual','1_grau_justica_federal','2_grau
 'tribunal','tribunal_de_justica_estadual','tribunal_superior','uf','v','value',
 'vara_camara','br_uf_map','pnud_uf','%>%','ano','ufn','popt','uf.y','esfera_processo',
 'ufn_processo','comarca_secao','map_chr','n1','nivel','assunto','penal_lgl','ate_pena',
-'de_pena','%<>%'))
+'de_pena','%<>%','teve_inelegivel','teve_multa','teve_pena','teve_perda_bens',
+'teve_perda_cargo','teve_proibicao','teve_ressarcimento','teve_suspensao','ate_proibicao',
+'de_proibicao','ate_suspensao','de_suspensao'))
 
 escape_unicode_df <- function(df){
   df_res <- df
