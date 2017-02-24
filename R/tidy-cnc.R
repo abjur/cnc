@@ -288,13 +288,39 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     filter(str_detect(n1, regex("penal", ignore_case = T))) %>%
     select(dplyr::contains("n")) %>%
     gather(nivel, assunto) %>%
+    filter(assunto != '') %>%
     distinct(assunto, .keep_all = T) %>%
-    with(assunto)
+    with(assunto) %>%
+    abjutils::rm_accent() %>%
+    str_to_lower() %>%
+    str_trim()
 
-  tidy_cnc %>%
+  assuntos_penais_regex <- paste0("^", assuntos_penais, "$")
+  assuntos_penais_regex[which(assuntos_penais_regex == "^roubo$")] <- "^roubo"
+  assuntos_penais_regex[which(assuntos_penais_regex == "^furto$")] <- "^furto"
+  assuntos_penais_regex[which(assuntos_penais_regex == "^estelionato$")] <- "^estelionato"
+  assuntos_penais_regex[which(assuntos_penais_regex == "^peculato$")] <- "^peculato"
+
+  assuntos_penais_regex <- c(assuntos_penais_regex, "crime","trafico","contra a flora",
+                             "contra a vida","dano \\(art\\. 163\\)","contra a dignidade sexual",
+                             "contra o meio ambiente","contra a fauna","extorsao",
+                             "concussao \\(art\\. 316, caput\\)","contra as financas publicas",
+                             "desobediencia \\(art\\. 330\\)","contra a ordem tributaria",
+                             "contra o patrimonio","corrupcao","contrabando","direito penal militar",
+                             "apropriacao indebita \\(art\\. 168, caput\\)","concussao \\(art\\. 316, caput\\)",
+                             "contra o ordenamento urbano e o patrimonio cultural","homicidio")
+
+  assuntos_penais_regex <- paste0(assuntos_penais_regex, collapse = "|")
+
+  tidy_cnc2 <- tidy_cnc %>%
     gather(rank, assunto, dplyr::contains("assunto_nm")) %>%
     filter(!is.na(assunto)) %>%
-    mutate(penal_lgl = assunto %in% assuntos_penais) %>%
+    mutate(assunto2 = assunto %>%
+             str_trim() %>%
+             str_to_lower() %>%
+             abjutils::rm_accent(),
+           penal_lgl = str_detect(assunto2, assuntos_penais_regex)) %>%
+    select(-assunto2) %>%
     group_by(arq) %>%
     mutate(assunto_penal_any = any(penal_lgl),
            assunto_penal_all = all(penal_lgl)) %>%
