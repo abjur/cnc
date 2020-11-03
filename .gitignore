@@ -1,11 +1,12 @@
 .Rproj.user
 .Rhistory
 .RData
-data-raw/pags/*
-data-raw/pessoas/*
-data-raw/pessoas_infos/*
-data-raw/processos/*
+data-raw/cnc_pag/*
+data-raw/cnc_pessoa/*
+data-raw/cnc_pessoa_infos/*
+data-raw/cnc_processo/*
 inst/doc
 vignettes/rsconnect/*
 vignettes/libs/*
 vignettes/style.log
+docs

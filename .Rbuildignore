@@ -2,3 +2,8 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^\.travis\.yml$
+^\.github$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

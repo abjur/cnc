@@ -326,7 +326,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
            assunto_penal_all = all(penal_lgl)) %>%
     select(-penal_lgl) %>%
     spread(rank,assunto) %>%
-    escape_unicode_df() %>%
+    # escape_unicode_df() %>%
     ungroup() %>%
     mutate_at(.funs = funs(ifelse(!is.na(.), TRUE, FALSE)),
               .cols = vars(teve_inelegivel, teve_multa, teve_pena,
@@ -405,7 +405,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #'    \item{assunto_nm_4}{assunto_nm_4}
 #'    \item{assunto_nm_5}{assunto_nm_5}
 #' }
-#' @source \url{https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php}
+#' @source <https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php>
 "tidy_cnc"
 
 
