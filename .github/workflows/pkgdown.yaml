@@ -8,9 +8,9 @@ name: pkgdown
 
 jobs:
   pkgdown:
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.PAT }}
     steps:
       - uses: actions/checkout@v2
 
@@ -20,7 +20,7 @@ jobs:
 
       - name: Query dependencies
         run: |
-          install.packages('remotes')
+          install.packages('remotes', "https://packagemanager.rstudio.com/all/__linux__/bionic/latest")
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
@@ -34,8 +34,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          remotes::install_deps(dependencies = TRUE)
-          install.packages("pkgdown", type = "binary")
+          remotes::install_deps(dependencies = TRUE, "https://packagemanager.rstudio.com/all/__linux__/bionic/latest")
+          install.packages("pkgdown", "https://packagemanager.rstudio.com/all/__linux__/bionic/latest")
         shell: Rscript {0}
 
       - name: Install package
