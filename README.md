@@ -25,7 +25,7 @@ Improbidade Administrativa e Inelegibilidade - CNJ.
 -   `cnc_download_pessoa()` para baixar as páginas de condenados do CNC.
 -   `cnc_download_processo()` para baixar as páginas de processos do
     CNC.
--   `cnc_download_info_pessoas()` para baixar as páginas de informações
+-   `cnc_download_pessoa_infos()` para baixar as páginas de informações
     de pessoas do CNC.
 
 ### Parsers
@@ -37,7 +37,7 @@ Improbidade Administrativa e Inelegibilidade - CNJ.
 -   `cnc_parse_processo()` transformas os arquivos baixados por
     `cnc_download_processo()` em `tibble`.
 -   `cnc_parse_pessoa_infos()` transformas os arquivos baixados por
-    `cnc_download_info_pessoas()` em `tibble`.
+    `cnc_download_pessoa_infos()` em `tibble`.
 
 ### Workflow
 
