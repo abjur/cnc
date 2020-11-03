@@ -1,17 +1,28 @@
 library(magrittr)
 devtools::load_all()
 
+pvec <- function (.x, .f, ...) {
+  future::plan("multisession")
+  on.exit(future::plan("default"))
+  p <- progressr::progressor(steps = length(.x))
+  ..f <- function(x, ...) {
+    p()
+    (purrr::safely(.f))(x, ...)
+  }
+  furrr::future_map(.x, ..f, ...)
+}
+
 # pags ------------------------------------------------------------------------
 # download
 pags <- seq_len(cnc_npag())
 progressr::with_progress({
-  result <- lex::pvec(pags, cnc_download_pag, "data-raw/cnc_pag")
+  result <- pvec(pags, cnc_download_pag, "data-raw/cnc_pag")
 })
 
 # parse
 arqs <- fs::dir_ls("data-raw/cnc_pag")
 progressr::with_progress({
-  parsed <- lex::pvec(arqs, cnc_parse_pag)
+  parsed <- pvec(arqs, cnc_parse_pag)
 })
 
 # export
@@ -31,13 +42,13 @@ links <- da_pags %>%
 
 # download
 progressr::with_progress({
-  result <- lex::pvec(links, cnc_download_pessoa, "data-raw/cnc_pessoa")
+  result <- pvec(links, cnc_download_pessoa, "data-raw/cnc_pessoa")
 })
 
 # parse
 arqs <- fs::dir_ls("data-raw/cnc_pessoa")
 progressr::with_progress({
-  parsed <- lex::pvec(arqs, cnc_parse_pessoa)
+  parsed <- pvec(arqs, cnc_parse_pessoa)
 })
 
 # export
@@ -57,13 +68,13 @@ links <- da_pags %>%
 
 # download
 progressr::with_progress({
-  result <- lex::pvec(links, cnc_download_processo, "data-raw/cnc_processo")
+  result <- pvec(links, cnc_download_processo, "data-raw/cnc_processo")
 })
 
 # parse
 arqs <- fs::dir_ls("data-raw/cnc_processo")
 progressr::with_progress({
-  parsed <- lex::pvec(arqs, cnc_parse_processo)
+  parsed <- pvec(arqs, cnc_parse_processo)
 })
 
 # export
@@ -82,13 +93,13 @@ links <- da_pags %>%
 # download
 future::plan(future::multisession, workers = 8)
 progressr::with_progress({
-  result <- lex::pvec(links, cnc_download_pessoa_infos)
+  result <- pvec(links, cnc_download_pessoa_infos)
 })
 
 # parse
 arqs <- fs::dir_ls("data-raw/cnc_pessoa_infos")
 progressr::with_progress({
-  parsed <- lex::pvec(arqs, cnc_parse_pessoa_infos)
+  parsed <- pvec(arqs, cnc_parse_pessoa_infos)
 })
 
 # export
