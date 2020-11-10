@@ -39,14 +39,15 @@ cnc_parse_pag <- function(arq) {
     rvest::html_attr('href') %>%
     stringr::str_replace_all("'|\\\\", '')
 
-  links <- c(
-    l0[stringr::str_detect(l0, '_condenacao')],
-    l0[stringr::str_detect(l0, '_processo')]
-  )
+  # links <- c(
+  #   l0[stringr::str_detect(l0, '_condenacao')],
+  #   l0[stringr::str_detect(l0, '_processo')]
+  # )
 
   tb %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(link = links)
+    # dplyr::mutate(link = links)
+    dplyr::mutate(link = l0)
 
 }
 
