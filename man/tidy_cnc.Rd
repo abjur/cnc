@@ -43,7 +43,7 @@ A data frame with 35977 rows and 57 variables:
 \item{ate_pena}{ate_pena}
 \item{ate_proibicao}{ate_proibicao}
 \item{ate_suspensao}{ate_suspensao}
-\item{arq_pessoa}{arq_pessoa}
+\item{arq_pessoa_infos}{arq_pessoa_infos}
 \item{tipo_pessoa}{tipo_pessoa}
 \item{nm_pessoa}{nm_pessoa}
 \item{sexo}{sexo}

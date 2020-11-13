@@ -32,7 +32,7 @@ readr::write_rds(da_pag, "data-raw/da_pag.rds", compress = "xz")
 # pessoa ----------------------------------------------------------------------
 
 # import
-da_pags <- readr::read_rds("data-raw/da_pags.rds")
+da_pags <- readr::read_rds("data-raw/da_pag.rds")
 future::plan(future::sequential)
 
 links <- da_pags %>%
@@ -59,10 +59,10 @@ readr::write_rds(da_pessoa, "data-raw/da_pessoa.rds", compress = "xz")
 # processo --------------------------------------------------------------------
 
 # import
-da_pags <- readr::read_rds("data-raw/da_pags.rds")
+da_pags <- readr::read_rds("data-raw/da_pag.rds")
 
 links <- da_pags %>%
-  dplyr::filter(name == "num_processo") %>%
+  dplyr::filter(key == "num_processo") %>%
   dplyr::pull(link) %>%
   unique()
 
@@ -84,16 +84,16 @@ readr::write_rds(da_processo, "data-raw/da_processo.rds", compress = "xz")
 # pessoa info -----------------------------------------------------------------
 
 # import
-da_pags <- readr::read_rds("data-raw/da_pags.rds")
+da_pags <- readr::read_rds("data-raw/da_pag.rds")
 links <- da_pags %>%
-  dplyr::filter(name == "nm_pessoa") %>%
+  dplyr::filter(key == "nm_pessoa") %>%
   dplyr::pull(link) %>%
   unique()
 
 # download
 future::plan(future::multisession, workers = 8)
 progressr::with_progress({
-  result <- pvec(links, cnc_download_pessoa_infos)
+  result <- pvec(links, cnc_download_pessoa_infos, "data-raw/cnc_pessoa_infos")
 })
 
 # parse

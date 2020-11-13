@@ -21,7 +21,11 @@ utils::globalVariables(c(
   'de_pena','%<>%','teve_inelegivel','teve_multa','teve_pena','teve_perda_bens',
   'teve_perda_cargo','teve_proibicao','teve_ressarcimento','teve_suspensao','ate_proibicao',
   'de_proibicao','ate_suspensao','de_suspensao','assunto2',
-  "V1", "name", "rowid"
+  "V1", "name", "rowid", '4ra', 'arq_pessoa_infos', 'arq_processo', 'label_data_julg_coleg',
+  'label_pena_privativa', 'proibicao1', 'proibicao2', 'proibicao3', 'proibicao4',
+  'proibicao_de_contratar_com_o_poder_publico_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario',
+  'proibicao_de_receber_incentivos_crediticios_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario',
+  'proibicao_de_receber_incentivos_fiscais_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario'
 ))
 
 # escape_unicode_df <- function(df){

@@ -90,7 +90,7 @@ cnc_download_processo <- function(link, path) {
 #'
 #' @export
 cnc_download_pessoa_infos <- function(link, path) {
-  # fs::dir_create(path)
+  fs::dir_create(path)
   num_link <- gsub('[^0-9]', '', link)
   f <- sprintf('%s/%s.html', path, num_link)
   if (!file.exists(f)) {
