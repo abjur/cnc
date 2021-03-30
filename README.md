@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# cnc
+# cnc <img src='man/figures/logo.png' align="right" height="138" />
 
 <!-- badges: start -->
 
@@ -54,7 +54,9 @@ colunas já trabalhadas. A base resultante está praticamente em formato
 analítico, carecendo somente de análises de inconsistências mais
 detalhadas.
 
-    cnc_tidy <- tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
+``` r
+cnc_tidy <- tidy_cnc(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
+```
 
 A base de dados possui essas colunas:
 
@@ -108,7 +110,7 @@ A base de dados possui essas colunas:
     -   `de_proibicao`: data de início.
     -   `ate_proibicao`: data do fim (pode ser no futuro).
 
-1.  Processos
+2.  Processos
 
 -   `arq_processo`: nome do arquivo (contém o id que aparece no link da
     base `cnc_pags`).
@@ -124,7 +126,7 @@ A base de dados possui essas colunas:
     julgamento (segundo grau ou militar).
 -   `dt_propositura`: data de propositura da ação.
 
-1.  Pessoas
+3.  Pessoas
 
 -   Identificadores:
     -   `arq_pessoa`: nome do arquivo que contém as informações.
