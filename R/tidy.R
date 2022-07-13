@@ -291,7 +291,7 @@ tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
 #' @import janitor
 #' @export
 tidy_pessoas <- function(cnc_pessoa_infos) {
-  data(cadmun, package = 'abjData',  envir = environment())
+  cadmun <- abjData::cadmun
   cnc_pessoa_tidy <- cnc_pessoa_infos %>%
     spread(key, value) %>%
     rename(id_pessoa = id) %>%
@@ -329,9 +329,8 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     inner_join(cnc2, 'id_pessoa') %>%
     inner_join(cnc3, 'id_processo')
 
-  data(cadmun, package = 'abjData', envir = environment())
-  data(pnud_uf, package = 'abjData', envir = environment())
-  data(br_uf_map, package = 'abjData', envir = environment())
+  cadmun <- abjData::cadmun
+  pnud_uf <- abjData::pnud_uf
 
   cadmun %<>% distinct(cod, uf) %>% mutate_all(as.character)
   pnud_uf %<>% filter(ano == 2010) %>%
