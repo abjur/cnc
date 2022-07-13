@@ -17,6 +17,8 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache-version: 2
+          extra-packages: |
+            any::pkgdown
       - uses: r-lib/actions/setup-pandoc@v2
 
       - name: Install package
