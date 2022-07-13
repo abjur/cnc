@@ -1,7 +1,7 @@
-pandoc: 2.7.3
-pkgdown: 1.6.1
+pandoc: 2.14.2
+pkgdown: 2.0.5
 pkgdown_sha: ~
 articles:
   cnc-desc: cnc-desc.html
-last_built: 2020-11-13T01:02Z
+last_built: 2022-07-13T18:53Z
 
