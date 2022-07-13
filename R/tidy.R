@@ -539,6 +539,3 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
 #' }
 #' @source <https://www.cnj.jus.br/improbidade_adm/consultar_requerido.php>
 "tidy_cnc"
-
-
-
