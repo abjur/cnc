@@ -10,17 +10,11 @@
 #'
 #' @export
 cnc_npag <- function() {
-  tmp <- fs::file_temp()
-  fs::dir_create(tmp)
-  on.exit(fs::dir_delete(tmp))
-  arq <- cnc_download_pag(1, tmp)
-  npags <- arq %>%
-    xml2::read_html() %>%
-    xml2::xml_find_first("//td[@align='right']") %>%
-    xml2::xml_text() %>%
-    stringr::str_extract("(?<=de )[0-9]+") %>%
-    as.numeric()
-  npags
+  httr::GET("http://www.cnj.jus.br/improbidade_adm/consultar_requerido.php?validar=form&rs=pesquisarRequeridoGetTabela&rst=&rsrnd=0&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=I&rsargs[]=0&rsargs[]=POSICAO_INICIAL_PAGINACAO_PHP0&rsargs[]=QUANTIDADE_REGISTROS_PAGINACAO15") |>
+    httr::content() |>
+    xml2::xml_find_first(xpath = ".//body/table[2]//b[2]") |>
+    xml2::xml_text() |>
+    base::as.numeric()
 }
 
 #' Baixa página do CNC
@@ -38,12 +32,14 @@ cnc_npag <- function() {
 #'
 #' @export
 cnc_download_pag <- function(pag, path) {
-  x <- 'http://www.cnj.jus.br/improbidade_adm/consultar_requerido.php?validar=form&rs=pesquisarRequeridoGetTabela&rst=&rsrnd=0&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=I&rsargs[]=0&rsargs[]=POSICAO_INICIAL_PAGINACAO_PHP%s&rsargs[]=QUANTIDADE_REGISTROS_PAGINACAO15'
+  x <- "http://www.cnj.jus.br/improbidade_adm/consultar_requerido.php?validar=form&rs=pesquisarRequeridoGetTabela&rst=&rsrnd=0&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=&rsargs[]=I&rsargs[]=0&rsargs[]=POSICAO_INICIAL_PAGINACAO_PHP%s&rsargs[]=QUANTIDADE_REGISTROS_PAGINACAO15"
   u <- sprintf(x, as.character((pag - 1) * 15))
   fs::dir_create(path)
-  arq <- sprintf('%s/pag_%05d.html', path, pag)
+  arq <- sprintf("%s/%s.html", path, pag)
   if (!file.exists(arq)) {
-    r <- httr::GET(u, httr::write_disk(arq, overwrite = TRUE))
+    httr::GET(u) %>%
+      httr::content() %>%
+      readr::write_lines(arq)
   }
   arq
 }
@@ -58,13 +54,15 @@ cnc_download_pag <- function(pag, path) {
 #' @rdname download
 #'
 #' @export
-cnc_download_pessoa <- function(link, path) {
+cnc_download_condenacao <- function(id_condenacao, path) {
   fs::dir_create(path)
-  num_link <- gsub('[^0-9]', '', link)
-  f <- sprintf('%s/%s.html', path, num_link)
+  # num_link <- gsub('[^0-9]', '', link)
+  f <- sprintf("%s/%s.html", path, id_condenacao)
   if (!file.exists(f)) {
-    link <- paste0('http://www.cnj.jus.br/improbidade_adm/', link)
-    httr::GET(link, httr::write_disk(f, TRUE))
+    link <- paste0("http://www.cnj.jus.br/improbidade_adm/visualizar_condenacao.php?seq_condenacao=", id_condenacao)
+    httr::GET(link) %>%
+      httr::content() |>
+      readr::write_lines(f)
   }
   f
 }
@@ -77,8 +75,17 @@ cnc_download_pessoa <- function(link, path) {
 #' @rdname download
 #'
 #' @export
-cnc_download_processo <- function(link, path) {
-  cnc_download_pessoa(link, path)
+cnc_download_processo <- function(id_processo, path) {
+  fs::dir_create(path)
+  # num_link <- gsub('[^0-9]', '', link)
+  f <- sprintf("%s/%s.html", path, id_processo)
+  if (!file.exists(f)) {
+    link <- paste0("http://www.cnj.jus.br/improbidade_adm/visualizar_processo.php?seq_processo=", id_processo)
+    httr::GET(link) %>%
+      httr::content() |>
+      readr::write_lines(f)
+  }
+  f
 }
 
 #' Baixa infos de pessoa
@@ -89,17 +96,19 @@ cnc_download_processo <- function(link, path) {
 #' @rdname download
 #'
 #' @export
-cnc_download_pessoa_infos <- function(link, path) {
+cnc_download_pessoa_infos <- function(id, path) {
   fs::dir_create(path)
-  num_link <- gsub('[^0-9]', '', link)
-  f <- sprintf('%s/%s.html', path, num_link)
+  # num_link <- gsub("[^0-9]", "", link)
+  f <- sprintf("%s/%s.html", path, id)
   if (!file.exists(f)) {
     link <- paste0(
       "http://www.cnj.jus.br/improbidade_adm/visualizar_condenacao.php?",
       "seq_condenacao=1&rs=getDadosParte&rst=&rsrnd=0&rsargs[]=",
-      num_link
+      id
     )
-    httr::GET(link, httr::write_disk(f, TRUE))
+    httr::GET(link) %>%
+      httr::content() %>%
+      readr::write_lines(f)
   }
   f
 }

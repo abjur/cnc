@@ -10,3 +10,4 @@ vignettes/rsconnect/*
 vignettes/libs/*
 vignettes/style.log
 docs
+tmp/
