@@ -5,41 +5,19 @@ get_number_from_url_parameter <- function(href) {
     stringr::str_replace("\\\\'", "")
 }
 
-parse_people_info <- function(people) {
-  condenacao_url_id <- people |>
-    purrr::pluck("nome_href") |>
-    get_number_from_url_parameter()
-
-  processo_url_id <- people |>
-    purrr::pluck("num_processo_href") |>
-    get_number_from_url_parameter()
-
-  nome <- people |>
-      purrr::pluck("nome") |>
-      stringr::str_replace_all(stringr::fixed("\\"), "@") |>
-      stringr::str_replace_all("\n|\t|@.", "") |>
-      stringr::str_trim()
-
-  base::list(
-    nome = nome,
-    num_processo = people |> purrr::pluck("num_processo") |> stringr::str_trim(),
-    condenacao_url_id = condenacao_url_id,
-    processo_url_id = processo_url_id
-  )
-}
 #' Parse dos arquivos HTML baixados
 #'
 #' [cnc_parse_pag()] transforma arquivo HTML de uma página do CNC em um data.frame.
 #'
-#' @param arq caminho do arquivo que deve ser processado.
+#' @param html string que deve ser processado.
 #'
 #' @return Para [cnc_parse_pag()], uma `tibble` com as colunas
 #'
 #' \itemize{
-#'   \item `id` id (1 a 15) do indivíduo obtido na página.
-#'   \item `key` `"nm_pessoa"` ou `"num_processo"`, indicando se é o nome da pessoa ou número do processo.
-#'   \item `value` nome da pessoa ou número do processo.
-#'   \item `link` para acessar informações da pessoa ou do processo (info utilizada nos outros scrapers).
+#'   \item `nome` Nome da pessoa
+#'   \item `num_processo` número do processo
+#'   \item `condenacao_id` ID da condenação
+#'   \item `processo_id` ID do processo
 #' }
 #'
 #' @name parse
@@ -60,14 +38,22 @@ cnc_parse_pag <- function(html) {
       lhs_href <- lhs_node |> xml2::xml_attr("href")
       rhs_href <- rhs_node |> xml2::xml_attr("href")
 
+      nome <- lhs_node |>
+        xml2::xml_text() |>
+        stringr::str_replace_all(stringr::fixed("\\"), "@") |>
+        stringr::str_replace_all("\n|\t|@.", "") |>
+        stringr::str_trim()
+
+      condenacao_id <- lhs_href |> get_number_from_url_parameter()
+      processo_id <- rhs_href |> get_number_from_url_parameter()
+
       base::list(
-        nome = lhs_node |> xml2::xml_text(),
-        nome_href = lhs_href,
-        num_processo = rhs_node |> xml2::xml_text(),
-        num_processo_href = rhs_href
+        nome = nome,
+        condenacao_id = condenacao_id,
+        num_processo = rhs_node |> xml2::xml_text() |> stringr::str_trim(),
+        processo_id = processo_id
       )
     }) |>
-    purrr::map(parse_people_info) |>
     purrr::list_transpose() |>
     tibble::as_tibble()
 }

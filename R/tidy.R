@@ -124,26 +124,27 @@ tidy_processos <- function(cnc_processos) {
     )
 }
 
-#' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos
-#'
-#' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
+#' Tidyfica base que vem de parse_cnc_condenacoes
 #'
 #' @param cnc_condenacoes base raw de condenações.
-#' @param cnc_pags base raw das paginas.
-#' @param cnc_processos base raw dos processos.
 #'
 #' @import dplyr
 #' @importFrom lubridate dmy
 #' @import stringr
-#' @import tidyr
-#' @import janitor
+#' @import purrr
 #'
 #' @export
 tidy_condenacoes <- function(cnc_condenacoes) {
   sanitize <- cnc_condenacoes |>
     purrr::map_df(\(c) {
-      c |>
-        purrr::pluck("df") |>
+      condenacao_id <- c |> purrr::pluck("condenacao_id")
+      df <- c |> purrr::pluck("df")
+
+      if (base::nrow(df) == 0) {
+        return(tibble::tibble(condenacao_id = condenacao_id))
+      }
+
+      df |>
         dplyr::filter(stringr::str_length(key) > 0) |>
         dplyr::filter(!(key == "link" & stringr::str_starts(value, "visualizar_processo.php?"))) |>
         dplyr::mutate(key = key |> tidy_nm()) |>
@@ -161,6 +162,7 @@ tidy_condenacoes <- function(cnc_condenacoes) {
     })
 
   loc <- readr::locale(decimal_mark = ",", grouping_mark = ".")
+
   re_pena <-
     sprintf(
       "Anos%s([0-9]+)%sMeses%s([0-9]+)%sDias%s([0-9]+)",
@@ -181,7 +183,7 @@ tidy_condenacoes <- function(cnc_condenacoes) {
       teve_inelegivel = stringr::str_detect(inelegibilidade, "SIM"),
       teve_multa = base::is.character(pagamento_de_multa) & stringr::str_detect(pagamento_de_multa, "SIM"),
       vl_multa = base::ifelse(
-        base::is.character(pagamento_de_multa) & stringr::str_detect(pagamento_de_multa, "SIM"),
+        teve_multa,
         readr::parse_number(pagamento_de_multa, locale = loc),
         NA_real_
       ),
@@ -212,14 +214,10 @@ tidy_condenacoes <- function(cnc_condenacoes) {
         NA_real_
       ),
       teve_suspensao = base::is.character(suspensao_dos_direitos_politicos) & stringr::str_detect(suspensao_dos_direitos_politicos, "SIM"),
-      de_suspensao = lubridate::dmy(stringr::str_match(suspensao_dos_direitos_politicos, re_pena_de)[, 2]),
-      ate_suspensao = lubridate::dmy(stringr::str_match(suspensao_dos_direitos_politicos, re_pena_ate)[, 2]),
+      de_suspensao = stringr::str_match(suspensao_dos_direitos_politicos, re_pena_de)[, 2] |> lubridate::dmy(),
+      ate_suspensao = stringr::str_match(suspensao_dos_direitos_politicos, re_pena_ate)[, 2] |> lubridate::dmy(),
       duracao_suspensao = base::as.numeric(ate_suspensao - de_suspensao),
-      comunicacao_tse = dplyr::if_else(
-        stringr::str_detect(suspensao_dos_direitos_politicos, "Comunica.+SIM"),
-        TRUE,
-        NA
-      ),
+      comunicacao_tse = stringr::str_detect(suspensao_dos_direitos_politicos, "Comunica.+SIM"),
       situacao = situacao,
       tipo_pena = tipo_pena,
       visualizacao_pena = visualizacao_pena,
@@ -233,6 +231,7 @@ tidy_condenacoes <- function(cnc_condenacoes) {
       assunto_nm_4 = assunto_nm_4,
       assunto_cod_5 = assunto_cod_5,
       assunto_nm_5 = assunto_nm_5,
+      link = link,
     ) |>
     dplyr::select(!c(proibicao_txt))
 }
