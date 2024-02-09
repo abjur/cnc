@@ -3,9 +3,9 @@ tidy_nm <- function(x) {
     tolower() %>%
     abjutils::rm_accent() %>%
     stringr::str_trim() %>%
-    stringr::str_replace_all('[^0-9a-z]+', '_') %>%
-    stringr::str_replace_all('_+', '_') %>%
-    stringr::str_replace_all('^_|_$', '')
+    stringr::str_replace_all("[^0-9a-z]+", "_") %>%
+    stringr::str_replace_all("_+", "_") %>%
+    stringr::str_replace_all("^_|_$", "")
 }
 
 #' Tidyfica base que vem de parse_cnc_pags
@@ -17,15 +17,19 @@ tidy_nm <- function(x) {
 #' @export
 tidy_pags <- function(cnc_pags) {
   cnc_pags_tidy <- cnc_pags %>%
-    tidyr::unite(v, value, link, sep = '@@@') %>%
+    tidyr::unite(v, value, link, sep = "@@@") %>%
     tidyr::spread(key, v) %>%
-    tidyr::separate(nm_pessoa, c('lab_pessoa', 'link_condenacao'), sep = '@@@') %>%
-    tidyr::separate(num_processo, c('lab_processo', 'link_processo'), sep = '@@@') %>%
+    tidyr::separate(nm_pessoa, c("lab_pessoa", "link_condenacao"), sep = "@@@") %>%
+    tidyr::separate(num_processo, c("lab_processo", "link_processo"), sep = "@@@") %>%
     dplyr::rename(id_pag = id) %>%
-    dplyr::mutate(id_processo = stringr::str_extract(link_processo, '[0-9]+$'),
-                  id_condenacao = stringr::str_extract(link_condenacao, '[0-9]+$')) %>%
-    dplyr::select(arq_pag, id_pag, id_condenacao, id_processo, lab_pessoa,
-                  lab_processo, link_condenacao, link_processo)
+    dplyr::mutate(
+      id_processo = stringr::str_extract(link_processo, "[0-9]+$"),
+      id_condenacao = stringr::str_extract(link_condenacao, "[0-9]+$")
+    ) %>%
+    dplyr::select(
+      arq_pag, id_pag, id_condenacao, id_processo, lab_pessoa,
+      lab_processo, link_condenacao, link_processo
+    )
   cnc_pags_tidy
 }
 
@@ -42,244 +46,194 @@ tidy_pags <- function(cnc_pags) {
 #' @import tidyr
 #' @export
 tidy_processos <- function(cnc_processos) {
-  cnc_processos_spr <- cnc_processos %>%
-    mutate(key = tidy_nm(key)) %>%
-    group_by(arq_processo, key) %>%
-    summarise(value = paste(value, collapse = '\n')) %>%
-    ungroup() %>%
-    filter(key != "") %>%
-    spread(key, value) %>%
-    select(-`4ra`)
-  # setNames(c('arq', 'subsecao', names(.)[-c(1, 2)]))
-  cnc_processos_tidy <- cnc_processos_spr %>%
-    unite(secao, secao_judiciaria, subsecao, sep = '\n') %>%
-    mutate(secao = if_else(secao == 'NA\nNA', NA_character_, secao)) %>%
-    mutate(secao = if_else(is.na(secao), comarca, secao))
+  sanitize <- cnc_processos |>
+    purrr::map_df(\(c) {
+      df <- c |>
+        purrr::pluck("df")
 
-  cnc_processos_tidy %<>%
-    mutate(instancia = if_else(
-      !is.na(`1_grau_justica_estadual`) |
-        !is.na(`1_grau_justica_federal`),
-      '1 grau',
-      if_else(
-        !is.na(`2_grau_justica_estadual`) |
-          !is.na(`2_grau_justica_federal`),
-        '2 grau',
-        if_else(!is.na(auditoria_militar), 'militar', 'superior')
-      )
-    )) %>%
-    unite(tribunal, tribunal_de_justica_estadual:tribunal_superior) %>%
-    mutate(
-      tribunal = str_replace_all(tribunal, '_NA|NA_', ''),
-      tribunal = if_else(tribunal == 'NA', NA_character_, tribunal)
-    ) %>%
-    unite(vara_camara,
-          starts_with('gabinete'),
-          starts_with('varas'),
-          auditoria_militar) %>%
-    mutate(
-      vara_camara = str_replace_all(vara_camara, '_NA|NA_', ''),
-      vara_camara = if_else(vara_camara == 'NA', NA_character_, vara_camara)
-    ) %>%
-    mutate(
-      dt_propositura = dmy(data_da_propositura_da_acao),
-      dt_cadastro = dmy_hms(data_da_informacao)
-    ) %>%
-    mutate(id_processo = str_match(arq_processo, "([0-9]+)\\.html$")[, 2]) %>%
-    select(
-      arq_processo,
-      id_processo,
-      dt_cadastro,
-      n_processo = num_do_processo,
+      processo_id <- c |> purrr::pluck("processo_id")
+
+      if (base::nrow(df) == 0) {
+        return(tibble::tibble(processo_id = processo_id))
+      }
+
+      df |>
+        dplyr::filter(stringr::str_length(key) > 0) |>
+        dplyr::mutate(key = tidy_nm(key)) |>
+        dplyr::group_by(key) |>
+        dplyr::group_split() |>
+        purrr::map_df(\(df_by_key) {
+          if (base::nrow(df_by_key) > 1) {
+            return(df_by_key |>
+              dplyr::mutate(key = stringr::str_c(key, dplyr::row_number(), sep = "_")))
+          }
+          df_by_key
+        }) |>
+        tidyr::pivot_wider(names_from = key, values_from = value) |>
+        tibble::add_column(processo_id = processo_id)
+    })
+
+  sanitize |>
+    dplyr::transmute(
+      instancia = dplyr::case_when(
+        !is.na(`2_grau_justica_estadual`) | !is.na(`2_grau_justica_federal`) ~ "2 grau",
+        !is.na(`1_grau_justica_estadual`) | !is.na(`1_grau_justica_federal`) ~ "1 grau",
+        !is.na(`auditoria_militar`) ~ "militar",
+        .default = "superior"
+      ),
+      tribunal = dplyr::case_when(
+        !is.na(tribunal_de_justica_estadual) ~ tribunal_de_justica_estadual,
+        !is.na(tribunal_regional_federal) ~ tribunal_regional_federal,
+        !is.na(tribunal_militar_estadual) ~ tribunal_militar_estadual,
+      ),
       esfera_processo = esfera,
-      tribunal,
-      instancia,
-      comarca_secao = secao,
-      vara_camara,
-      dt_propositura
+      num_do_processo = num_do_processo,
+      processo_id = processo_id,
+      comarca = comarca,
+      dt_propositura = lubridate::dmy(data_da_propositura_da_acao),
+      dt_cadastro = lubridate::dmy_hms(data_da_informacao),
+      esfera_gabinete_desembargador = dplyr::case_when(
+        !is.na(gabinete_de_desembargador_estadual) ~ "Estadual",
+        !is.na(gabinete_de_desembargador_federal) ~ "Federal"
+      ),
+      gabinete_desembargador = dplyr::case_when(
+        !is.na(gabinete_de_desembargador_estadual) ~ gabinete_de_desembargador_estadual,
+        !is.na(gabinete_de_desembargador_federal) ~ gabinete_de_desembargador_federal
+      ),
+      secao_judiciaria = secao_judiciaria,
+      subsecao_1 = dplyr::case_when(
+        !is.na(subsecao) ~ subsecao,
+        !is.na(subsecao_1) ~ subsecao_1
+      ),
+      subsecao_2 = subsecao_2,
+      esfera_vara_juizado = dplyr::case_when(
+        !is.na(varas_e_juizados_federais) ~ "Federal",
+        !is.na(varas_e_juizados_estaduais) ~ "Estadual"
+      ),
+      vara_juizados_1 = dplyr::case_when(
+        !is.na(varas_e_juizados_federais) ~ varas_e_juizados_federais,
+        !is.na(varas_e_juizados_estaduais) ~ varas_e_juizados_estaduais,
+        !is.na(varas_e_juizados_federais_1) ~ varas_e_juizados_federais_1,
+        !is.na(varas_e_juizados_estaduais_1) ~ varas_e_juizados_estaduais_1
+      ),
+      vara_juizados_2 = dplyr::case_when(
+        !is.na(varas_e_juizados_federais_2) ~ varas_e_juizados_federais_2,
+        !is.na(varas_e_juizados_estaduais_2) ~ varas_e_juizados_estaduais_2
+      ),
+      auditoria_militar = auditoria_militar
     )
-
-  cnc_processos_tidy
 }
 
-#' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos
-#'
-#' Tidyfica base que vem de parse_cnc_pessoas, parse_cnc_pags e parse_cnc_processos.
+#' Tidyfica base que vem de parse_cnc_condenacoes
 #'
 #' @param cnc_condenacoes base raw de condenações.
-#' @param cnc_pags base raw das paginas.
-#' @param cnc_processos base raw dos processos.
 #'
 #' @import dplyr
 #' @importFrom lubridate dmy
 #' @import stringr
-#' @import tidyr
-#' @import janitor
+#' @import purrr
 #'
 #' @export
-tidy_condenacoes <- function(cnc_condenacoes, cnc_pags, cnc_processos) {
-  loc <- readr::locale(decimal_mark = ',', grouping_mark = '.')
+tidy_condenacoes <- function(cnc_condenacoes) {
+  sanitize <- cnc_condenacoes |>
+    purrr::map_df(\(c) {
+      condenacao_id <- c |> purrr::pluck("condenacao_id")
+      df <- c |> purrr::pluck("df")
+
+      if (base::nrow(df) == 0) {
+        return(tibble::tibble(condenacao_id = condenacao_id))
+      }
+
+      df |>
+        dplyr::filter(stringr::str_length(key) > 0) |>
+        dplyr::filter(!(key == "link" & stringr::str_starts(value, "visualizar_processo.php?"))) |>
+        dplyr::mutate(key = key |> tidy_nm()) |>
+        dplyr::group_by(key) |>
+        dplyr::group_split() |>
+        purrr::map_df(\(df_by_key) {
+          if (base::nrow(df_by_key) > 1) {
+            return(df_by_key |>
+              dplyr::mutate(key = stringr::str_c(key, dplyr::row_number(), sep = "_")))
+          }
+          df_by_key
+        }) |>
+        tidyr::pivot_wider(names_from = key, values_from = value) |>
+        tibble::add_column(condenacao_id = c |> purrr::pluck("condenacao_id"))
+    })
+
+  loc <- readr::locale(decimal_mark = ",", grouping_mark = ".")
+
   re_pena <-
     sprintf(
-      'Anos%s([0-9]+)%sMeses%s([0-9]+)%sDias%s([0-9]+)',
-      '[[:space:]]+',
-      '[[:space:]]+',
-      '[[:space:]]+',
-      '[[:space:]]+',
-      '[[:space:]]+',
-      '[[:space:]]+'
+      "Anos%s([0-9]+)%sMeses%s([0-9]+)%sDias%s([0-9]+)",
+      "[[:space:]]+",
+      "[[:space:]]+",
+      "[[:space:]]+",
+      "[[:space:]]+",
+      "[[:space:]]+",
+      "[[:space:]]+"
     )
-  re_pena_de <- 'De:?[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
-  re_pena_ate <- 'At\u00e9:?[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})'
-  calcula_pena <- function(pena_txt) {
-    conta <- function(x) {
-      x <- as.numeric(x)
-      x[1] * 365 + x[2] * 30 + x[3]
-    }
-    apply(str_match(pena_txt, re_pena)[, c(2:4)], 1, conta)
-  }
-  cnc_condenacoes_spr <- cnc_condenacoes %>%
-    mutate(
-      key = tidy_nm(key),
-      key = if_else(
-        key == 'link' & str_detect(value, 'recuperarDados'),
-        'link_pessoa',
-        if_else(
-          key == 'link' & str_detect(value, 'visualizar_pr'),
-          'link_processo',
-          key
-        )
-      )
-    ) %>%
-    filter(!key %in% unique(tidy_nm(cnc_processos$key))) %>%
-    group_by(arq_pessoa, key) %>%
-    summarise(value = paste(value, collapse = '\n')) %>%
-    ungroup() %>%
-    spread(key, value) %>%
-    mutate_all(funs(suppressWarnings(na_if(., '')))) %>%
-    mutate_all(funs(suppressWarnings(na_if(., 'NA')))) %>%
-    remove_empty() %>%
-    rename(arq = arq_pessoa)
+  re_pena_de <- "De:?[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})"
+  re_pena_ate <- "At\u00e9:?[[:space:]]+([0-9]{2}/[0-9]{2}/[0-9]{4})"
 
-  aux_pags <- cnc_pags %>%
-    tidy_pags() %>%
-    select(arq_pag, id_pag, id_condenacao, id_processo)
-
-  cnc_condenacoes_tidy <- cnc_condenacoes_spr %>%
-    mutate(
-      id_pessoa = str_match(link_pessoa, "'([0-9]+)'")[, 2],
-      id_condenacao = str_match(arq, "([0-9]+)\\.html$")[, 2]
-    ) %>%
-    mutate(
-      dt_pena = dmy(label_data_julg_coleg)
-      # dt_transito = dmy(data_do_transito_em_julgado),
-      # dt_pena = if_else(is.na(dt_decisao), dt_transito, dt_decisao)
-    ) %>%
-    mutate(teve_inelegivel = tolower(inelegibilidade)) %>%
-    mutate(
-      teve_multa = if_else(
-        str_detect(pagamento_de_multa, 'SIM'),
-        'sim',
-        pagamento_de_multa
-      ),
-      vl_multa = if_else(
-        str_detect(pagamento_de_multa, 'SIM'),
+  sanitize |>
+    dplyr::transmute(
+      condenacao_id = condenacao_id,
+      dt_pena = lubridate::dmy(label_data_julg_coleg),
+      teve_inelegivel = stringr::str_detect(inelegibilidade, "SIM"),
+      teve_multa = base::is.character(pagamento_de_multa) & stringr::str_detect(pagamento_de_multa, "SIM"),
+      vl_multa = base::ifelse(
+        teve_multa,
         readr::parse_number(pagamento_de_multa, locale = loc),
         NA_real_
-      )
-    ) %>%
-    rename(pena_txt = label_pena_privativa) %>%
-    mutate(
-      # pena_txt = if_else(
-      #   is.na(pena_privativa_de_liberdade),
-      #   pena_privativa_de_liberdade_aplicada,
-      #   pena_privativa_de_liberdade
-      # ),
-      teve_pena = if_else(str_detect(pena_txt, 'SIM'), 'sim', pena_txt),
-      duracao_pena_regex = calcula_pena(pena_txt),
-      de_pena = dmy(str_match(pena_txt, re_pena_de)[, 2]),
-      ate_pena = dmy(str_match(pena_txt, re_pena_ate)[, 2]),
-      duracao_pena = as.numeric(ate_pena - de_pena)
-    ) %>%
-    mutate(
-      perda_bens = perda_de_bens_ou_valores_acrescidos_ilicitamente_ao_patrimonio,
-      teve_perda_bens = if_else(str_detect(perda_bens, 'SIM'), 'sim', perda_bens),
-      vl_perda_bens = if_else(
-        str_detect(perda_bens, 'SIM'),
-        readr::parse_number(perda_bens, locale = loc),
-        NA_real_
-      )
-    ) %>%
-    mutate(teve_perda_cargo = tolower(perda_de_emprego_cargo_funcao_publica)) %>%
-    rename(
+      ),
+      teve_pena = base::is.character(label_pena_privativa) & stringr::str_detect(label_pena_privativa, "SIM"),
+      de_pena = stringr::str_match(label_pena_privativa, re_pena_de)[, 2] |> lubridate::dmy(),
+      ate_pena = stringr::str_match(label_pena_privativa, re_pena_ate)[, 2] |> lubridate::dmy(),
+      durancao_pena = base::as.numeric(ate_pena - de_pena),
+      teve_perda_bens = base::is.character(perda_de_bens_ou_valores_acrescidos_ilicitamente_ao_patrimonio) & stringr::str_detect(perda_de_bens_ou_valores_acrescidos_ilicitamente_ao_patrimonio, "SIM"),
+      vl_perda_bens = base::ifelse(
+        teve_perda_bens,
+        readr::parse_number(perda_de_bens_ou_valores_acrescidos_ilicitamente_ao_patrimonio, locale = loc),
+        NA
+      ),
+      teve_perda_cargo = base::is.character(perda_de_emprego_cargo_funcao_publica) & stringr::str_detect(perda_de_emprego_cargo_funcao_publica, "SIM"),
       proibicao1 = proibicao_de_contratar_com_o_poder_publico_ou_receber_incentivos_fiscais_ou_crediticios_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario,
       proibicao2 = proibicao_de_contratar_com_o_poder_publico_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario,
       proibicao3 = proibicao_de_receber_incentivos_crediticios_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario,
-      proibicao4 = proibicao_de_receber_incentivos_fiscais_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario
-    ) %>%
-    mutate(
-      proibicao_txt = str_c(proibicao1, proibicao2, proibicao3, proibicao4, sep = " | "),
-      teve_proibicao = if_else(str_detect(proibicao_txt, 'SIM'), 'sim',
-                               proibicao_txt),
-      duracao_proibicao_regex = calcula_pena(proibicao_txt),
-      de_proibicao = dmy(str_match(proibicao_txt, re_pena_de)[, 2]),
-      ate_proibicao = dmy(str_match(proibicao_txt, re_pena_ate)[, 2]),
-      duracao_proibicao = as.numeric(ate_proibicao - de_proibicao)
-    ) %>%
-    mutate(
-      ressarcimento = ressarcimento_integral_do_dano,
-      teve_ressarcimento = if_else(str_detect(ressarcimento, 'SIM'), 'sim',
-                                   ressarcimento),
-      vl_ressarcimento = if_else(
-        str_detect(ressarcimento, 'SIM'),
-        readr::parse_number(ressarcimento, locale = loc),
+      proibicao4 = proibicao_de_receber_incentivos_fiscais_direta_ou_indiretamente_ainda_que_por_intermedio_de_pessoa_juridica_da_qual_seja_socio_majoritario,
+      proibicao_txt = stringr::str_c(proibicao1, proibicao2, proibicao3, proibicao4, sep = " | "),
+      teve_proibicao = base::is.character(proibicao_txt) & stringr::str_detect(proibicao_txt, "SIM"),
+      de_proibicao = lubridate::dmy(stringr::str_match(proibicao_txt, re_pena_de)[, 2]),
+      ate_proibicao = lubridate::dmy(stringr::str_match(proibicao_txt, re_pena_ate)[, 2]),
+      duracao_proibicao = base::as.numeric(ate_proibicao - de_proibicao),
+      teve_ressarcimento = base::is.character(ressarcimento_integral_do_dano) & stringr::str_detect(ressarcimento_integral_do_dano, "SIM"),
+      vl_ressarcimento = base::ifelse(
+        teve_ressarcimento,
+        readr::parse_number(ressarcimento_integral_do_dano, locale = loc),
         NA_real_
-      )
-    ) %>%
-    mutate(
-      suspensao_txt = suspensao_dos_direitos_politicos,
-      teve_suspensao = if_else(str_detect(suspensao_txt, 'SIM'), 'sim',
-                               suspensao_txt),
-      duracao_suspensao_regex = calcula_pena(suspensao_txt),
-      de_suspensao = dmy(str_match(suspensao_txt, re_pena_de)[, 2]),
-      ate_suspensao = dmy(str_match(suspensao_txt, re_pena_ate)[, 2]),
-      duracao_suspensao = as.numeric(ate_suspensao - de_suspensao),
-      comunicacao_tse = if_else(
-        str_detect(suspensao_txt, 'Comunica.+SIM'),
-        'sim',
-        NA_character_
-      )
-    ) %>%
-    # separate(cod_assunto,
-    #          paste('assunto_cod', 1:5, sep = '_'),
-    #          sep = '\n',
-    #          fill = 'right') %>%
-    # separate(nm_assunto,
-    #          paste('assunto_nm', 1:5, sep = '_'),
-    #          sep = '\n',
-    #          fill = 'right') %>%
-    inner_join(aux_pags, 'id_condenacao') %>%
-    select(
-      arq_pag,
-      id_pag,
-      arq,
-      id_condenacao,
-      id_processo,
-      id_pessoa,
-      # infos condenacao
-      tipo_pena,
-      dt_pena,
-      starts_with('assunto'),
-      # teve tal coisa?
-      starts_with('teve_'),
-      # qual o valor?
-      starts_with('vl_'),
-      # duracao, de, at\032
-      starts_with('duracao_'),
-      starts_with('de_'),
-      starts_with('ate_')
-    )
-  cnc_condenacoes_tidy
+      ),
+      teve_suspensao = base::is.character(suspensao_dos_direitos_politicos) & stringr::str_detect(suspensao_dos_direitos_politicos, "SIM"),
+      de_suspensao = stringr::str_match(suspensao_dos_direitos_politicos, re_pena_de)[, 2] |> lubridate::dmy(),
+      ate_suspensao = stringr::str_match(suspensao_dos_direitos_politicos, re_pena_ate)[, 2] |> lubridate::dmy(),
+      duracao_suspensao = base::as.numeric(ate_suspensao - de_suspensao),
+      comunicacao_tse = stringr::str_detect(suspensao_dos_direitos_politicos, "Comunica.+SIM"),
+      situacao = situacao,
+      tipo_pena = tipo_pena,
+      visualizacao_pena = visualizacao_pena,
+      assunto_cod_1 = assunto_cod_1,
+      assunto_nm_1 = assunto_nm_1,
+      assunto_cod_2 = assunto_cod_2,
+      assunto_nm_2 = assunto_nm_2,
+      assunto_cod_3 = assunto_cod_3,
+      assunto_nm_3 = assunto_nm_3,
+      assunto_cod_4 = assunto_cod_4,
+      assunto_nm_4 = assunto_nm_4,
+      assunto_cod_5 = assunto_cod_5,
+      assunto_nm_5 = assunto_nm_5,
+      link = link,
+    ) |>
+    dplyr::select(!c(proibicao_txt))
 }
 
 #' Tidyfica base que vem de parse_cnc_pessoas_infos
@@ -295,15 +249,20 @@ tidy_pessoas <- function(cnc_pessoa_infos) {
   cnc_pessoa_tidy <- cnc_pessoa_infos %>%
     spread(key, value) %>%
     rename(id_pessoa = id) %>%
-    mutate(across(.fns = ~na_if(.x, '')),
-           across(.fns = ~na_if(.x, 'NA'))) %>%
+    mutate(
+      across(.fns = ~ na_if(.x, "")),
+      across(.fns = ~ na_if(.x, "NA"))
+    ) %>%
     # mutate_all(funs(suppressWarnings(na_if(., '', 'NA')))) %>%
-    select(arq_pessoa_infos, id_pessoa, tipo_pessoa, nm_pessoa,
-           sexo, publico, esfera, orgao, cargo, uf, cod) %>%
-    mutate(sexo = if_else(!sexo %in% c('F', 'M'), NA_character_, sexo)) %>%
-    mutate(publico = if_else(!publico %in% c('S', 'N'), NA_character_, publico)) %>%
-    mutate(esfera = if_else(!esfera %in% c('F', 'D', 'E', 'M'),
-                            NA_character_, esfera)) %>%
+    select(
+      arq_pessoa_infos, id_pessoa, tipo_pessoa, nm_pessoa,
+      sexo, publico, esfera, orgao, cargo, uf, cod
+    ) %>%
+    mutate(sexo = if_else(!sexo %in% c("F", "M"), NA_character_, sexo)) %>%
+    mutate(publico = if_else(!publico %in% c("S", "N"), NA_character_, publico)) %>%
+    mutate(esfera = if_else(!esfera %in% c("F", "D", "E", "M"),
+      NA_character_, esfera
+    )) %>%
     mutate(uf = if_else(!uf %in% unique(cadmun$uf), NA_character_, uf))
   cnc_pessoa_tidy
 }
@@ -326,8 +285,8 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
   cnc2 <- tidy_pessoas(cnc_pessoa_infos)
   cnc3 <- tidy_processos(cnc_processos)
   tidy_cnc <- cnc1 %>%
-    inner_join(cnc2, 'id_pessoa') %>%
-    inner_join(cnc3, 'id_processo')
+    inner_join(cnc2, "id_pessoa") %>%
+    inner_join(cnc3, "id_processo")
 
   cadmun <- abjData::cadmun
   pnud_uf <- abjData::pnud_uf
@@ -336,41 +295,43 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
   pnud_uf %<>% filter(ano == 2010) %>%
     select(uf, ufn, popt) %>%
     mutate(uf = as.character(uf)) %>%
-    inner_join(cadmun, c('uf' = 'cod')) %>%
+    inner_join(cadmun, c("uf" = "cod")) %>%
     select(id = uf.y, ufn, popt)
 
-  regex_uf_estadual <- '\u00e7a d[eo] (Estado d[oae] )?(.+)$'
+  regex_uf_estadual <- "\u00e7a d[eo] (Estado d[oae] )?(.+)$"
   regex_uf_federal <- pnud_uf %>%
     with(ufn) %>%
     {
-      sprintf('(%s)|(%s)', ., abjutils::rm_accent(.))
+      sprintf("(%s)|(%s)", ., abjutils::rm_accent(.))
     } %>%
-    paste(collapse = '|') %>%
+    paste(collapse = "|") %>%
     regex(ignore_case = TRUE)
 
   ufs_estadual <- tidy_cnc %>%
-    filter(esfera_processo == 'Estadual') %>%
+    filter(esfera_processo == "Estadual") %>%
     mutate(
       ufn_processo = str_match(tribunal, regex_uf_estadual)[, 3],
-      ufn_processo = str_replace_all(ufn_processo, ' e dos T.+', '')
+      ufn_processo = str_replace_all(ufn_processo, " e dos T.+", "")
     ) %>%
-    inner_join(pnud_uf, c('ufn_processo' = 'ufn')) %>%
+    inner_join(pnud_uf, c("ufn_processo" = "ufn")) %>%
     select(id_condenacao, uf_processo = id)
 
   ufs_federal_1inst <- tidy_cnc %>%
-    filter(esfera_processo == 'Federal', instancia == '1 grau') %>%
+    filter(esfera_processo == "Federal", instancia == "1 grau") %>%
     mutate(ufn_processo = str_match_all(comarca_secao, regex_uf_federal) %>%
-             purrr::map_chr( ~ {
-               x <- as.character(.x[, -1])
-               x[x != ''][1]
-             })) %>%
+      purrr::map_chr(~ {
+        x <- as.character(.x[, -1])
+        x[x != ""][1]
+      })) %>%
     mutate(ufn_processo = toupper(abjutils::rm_accent(ufn_processo))) %>%
-    inner_join(mutate(pnud_uf, ufn_processo = toupper(abjutils::rm_accent(ufn))),
-               'ufn_processo') %>%
+    inner_join(
+      mutate(pnud_uf, ufn_processo = toupper(abjutils::rm_accent(ufn))),
+      "ufn_processo"
+    ) %>%
     select(id_condenacao, uf_processo = id)
 
   tidy_cnc <- tidy_cnc %>%
-    left_join(bind_rows(ufs_estadual, ufs_federal_1inst), 'id_condenacao') %>%
+    left_join(bind_rows(ufs_estadual, ufs_federal_1inst), "id_condenacao") %>%
     ungroup()
 
   control_table <- tpur::control_table
@@ -384,7 +345,7 @@ tidy_cnc <- function(cnc_condenacoes, cnc_pags, cnc_processos, cnc_pessoa_infos)
     filter(str_detect(n1, regex("penal", ignore_case = T))) %>%
     select(dplyr::contains("n")) %>%
     gather(nivel, assunto) %>%
-    filter(assunto != '') %>%
+    filter(assunto != "") %>%
     distinct(assunto, .keep_all = T) %>%
     with(assunto) %>%
     abjutils::rm_accent() %>%
