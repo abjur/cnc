@@ -1,8 +1,11 @@
-remove.packages("cnc")
+# NOTE: Precisamos remover o pacote cnc porque o furrr não usa a função local
+utils::remove.packages("cnc")
+
 devtools::load_all()
 
 tmp_dir <- fs::path_join(c(base::getwd(), "tmp"))
 
+# Diretorios para salvar os HTML de cada pagina
 consulta_dir <- fs::path_join(c(tmp_dir, "consulta"))
 condenacao_dir <- fs::path_join(c(tmp_dir, "condenacao"))
 processo_dir <- fs::path_join(c(tmp_dir, "processo"))
@@ -107,7 +110,7 @@ users_info <- tidy_condenacoes_df |>
       str |>
         stringr::str_match("'([0-9]+)'") |>
         base::as.vector() |>
-        tail(n = 1))
+        utils::tail(n = 1))
   )
 
 # Vamos baixar as informacoes de cada pessoa
@@ -123,7 +126,7 @@ pessoas_info_san <- users_info |>
   purrr::pluck("id_user_info") |>
   base::unique() |>
   purrr::map_df(\(id) {
-    fs::path_join(c(pessoa_info_dir, paste0(id, ".html"))) |>
+    fs::path_join(c(pessoa_info_dir, base::paste0(id, ".html"))) |>
       readr::read_file() |>
       cnc_parse_pessoa_infos() |>
       tidyr::pivot_wider(names_from = key, values_from = value)
@@ -135,10 +138,19 @@ tidy_pessoas_info_df <- users_info |>
   dplyr::left_join(pessoas_info_san, by = "id_user_info") |>
   dplyr::select(!c(link, nm_pessoa))
 
+tidy_condenacoes_df <- tidy_condenacoes_df |> dplyr::select(!link)
 
-output <- pessoas_consulta_df |>
+
+pessoas_consulta_df |> readr::write_rds("data-raw/da_pag.rds", compress = "xz")
+tidy_processos_df |> readr::write_rds("data-raw/da_processo.rds", compress = "xz")
+tidy_condenacoes_df |> readr::write_rds("data-raw/da_condenacao.rds", compress = "xz")
+tidy_pessoas_info_df |> readr::write_rds("data-raw/da_pessoa_infos.rds", compress = "xz")
+
+tidy_cnc <- pessoas_consulta_df |>
   dplyr::left_join(tidy_processos_df, by = "processo_id") |>
   dplyr::left_join(tidy_condenacoes_df, by = "condenacao_id") |>
   dplyr::left_join(tidy_pessoas_info_df, by = "condenacao_id")
 
-output |> readr::write_csv(file = "tmp/output.csv")
+tidy_cnc |> readr::write_rds(file = "data-raw/tidy_cnc.rds", compress = "xz")
+
+usethis::use_data(tidy_cnc, overwrite = TRUE)
